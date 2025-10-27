@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/utils/supabase/server";

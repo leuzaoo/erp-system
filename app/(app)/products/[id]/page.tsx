@@ -4,15 +4,20 @@ import Link from "next/link";
 export default async function ProductViewPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
+  if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+    return <pre className="text-red-400">ID inválido.</pre>;
+  }
+
   const supabase = await supabaseServer();
   const { data: product, error } = await supabase
     .from("products")
     .select(
       "id, name, price, active, max_length_cm, max_width_cm, max_height_cm, created_at",
     )
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (error) return <pre className="text-red-400">Erro: {error.message}</pre>;

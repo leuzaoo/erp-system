@@ -1,5 +1,4 @@
 import { supabaseServer } from "@/utils/supabase/server";
-import { updateProduct } from "../../actions";
 
 function Field({
   label,
@@ -22,15 +21,21 @@ const inputCls =
 export default async function ProductEditPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
+
+  if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+    return <pre className="text-red-400">ID inválido.</pre>;
+  }
+
   const supabase = await supabaseServer();
   const { data: product, error } = await supabase
     .from("products")
     .select(
       "id, name, price, active, max_length_cm, max_width_cm, max_height_cm",
     )
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (error) return <pre className="text-red-400">Erro: {error.message}</pre>;

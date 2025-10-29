@@ -1,22 +1,17 @@
 "use client";
 import { useState, FormEvent } from "react";
-import { useFormStatus } from "react-dom";
+import { signIn } from "@/app/actions/signin-action";
 import Card from "@/app/components/Card";
 import TextField from "@/app/components/TextField";
 import Button from "@/app/components/Button";
 
-export default function LoginForm({
-  action,
-}: {
-  action: (email: string, password: string) => Promise<void>;
-}) {
+export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { pending } = useFormStatus?.() ?? { pending: false };
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    await action(email, password);
+    await signIn(email, password);
   }
 
   return (
@@ -39,7 +34,7 @@ export default function LoginForm({
           type="password"
           placeholder="••••••••"
         />
-        <Button className="w-full" type="submit" disabled={pending}>
+        <Button className="w-full" type="submit">
           Entrar
         </Button>
       </form>

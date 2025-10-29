@@ -1,5 +1,9 @@
-import Link from "next/link";
 import { supabaseServer } from "@/utils/supabase/server";
+import Link from "next/link";
+
+import KpiCard from "@/app/components/KpiCard";
+import Td from "@/app/components/TdTable";
+import Th from "@/app/components/ThTable";
 
 function fmtBRL(v: number | string) {
   const n = Number(v);
@@ -17,35 +21,6 @@ type Product = {
   max_height_cm: number | null;
   created_at: string;
 };
-
-function Th({ children }: { children: React.ReactNode }) {
-  return (
-    <th className="border-b border-neutral-800 p-3 text-left">{children}</th>
-  );
-}
-
-function Td({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <td className={`border-b border-neutral-900 p-3 ${className}`}>
-      {children}
-    </td>
-  );
-}
-
-function KpiCard({ title, value }: { title: string; value: number }) {
-  return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900/40 p-4">
-      <div className="text-sm text-neutral-400">{title}</div>
-      <div className="mt-1 text-2xl font-semibold">{value}</div>
-    </div>
-  );
-}
 
 export default async function ProductsPage({
   searchParams,

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import Link from "next/link";
 
-import { supabaseServer } from "@/utils/supabase/server";
+import { supabaseRSC } from "@/utils/supabase/rsc";
 import { signOut } from "../actions/logout-action";
 
 import Sidebar from "../components/Sidebar";
@@ -10,11 +10,14 @@ import Sidebar from "../components/Sidebar";
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  const supabase = await supabaseServer();
+  const supabase = await supabaseRSC();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+
+  if (!user) {
+    redirect("/login");
+  }
 
   const { data: profile, error } = await supabase
     .from("profiles")

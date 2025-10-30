@@ -1,3 +1,4 @@
+import { EyeIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { supabaseServer } from "@/utils/supabase/server";
 import Link from "next/link";
 
@@ -67,24 +68,22 @@ export default async function ProductsPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Products</h1>
-          <p className="text-sm text-neutral-400">
-            Manage your product inventory
-          </p>
+          <h1 className="text-2xl font-bold">Produtos</h1>
         </div>
 
         <Link
           href="/products/new"
           className="inline-flex items-center gap-2 rounded-md bg-neutral-100 px-3 py-2 text-neutral-900 hover:bg-white"
         >
-          <span className="text-xl leading-none">＋</span> Add Product
+          <PlusIcon size={16} strokeWidth={3} />
+          Novo
         </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <KpiCard title="Total Products" value={total} />
-        <KpiCard title="Active" value={active} />
-        <KpiCard title="Inactive" value={inactive} />
+        <KpiCard title="Total de produtos" value={total} />
+        <KpiCard title="Ativos" value={active} />
+        <KpiCard title="Inativos" value={inactive} />
       </div>
 
       <form className="flex gap-2" action="/products" method="get">
@@ -92,14 +91,14 @@ export default async function ProductsPage({
           type="text"
           name="q"
           defaultValue={q}
-          placeholder="Search products..."
+          placeholder="Procurar produtos..."
           className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 outline-none focus:border-neutral-600"
         />
         <button
           className="rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 hover:bg-neutral-700"
           type="submit"
         >
-          Search
+          Buscar
         </button>
       </form>
 
@@ -107,9 +106,9 @@ export default async function ProductsPage({
         <table className="w-full border-collapse">
           <thead className="bg-neutral-900/60 text-sm text-neutral-300">
             <tr>
-              <Th>Product Name</Th>
-              <Th>Price</Th>
-              <Th>Max (L × W × H)</Th>
+              <Th>Nome</Th>
+              <Th>Valor</Th>
+              <Th>Dimensões (C × L × A)</Th>
               <Th>Status</Th>
               <Th> </Th>
             </tr>
@@ -136,7 +135,7 @@ export default async function ProductsPage({
                         : "border border-red-800 bg-red-900/30 text-red-300")
                     }
                   >
-                    {p.active ? "Active" : "Inactive"}
+                    {p.active ? "Ativo" : "Inativo"}
                   </span>
                 </Td>
                 <Td className="text-right">
@@ -145,13 +144,13 @@ export default async function ProductsPage({
                       href={`/products/${p.id}`}
                       className="rounded-md border border-neutral-700 px-2 py-1 hover:bg-neutral-800"
                     >
-                      View
+                      <EyeIcon strokeWidth={1.5} size={20} />
                     </Link>
                     <Link
                       href={`/products/edit/${p.id}`}
                       className="rounded-md border border-neutral-700 px-2 py-1 hover:bg-neutral-800"
                     >
-                      Edit
+                      <PencilIcon strokeWidth={1.5} size={20} />
                     </Link>
                     <form
                       action={async () => {
@@ -164,7 +163,7 @@ export default async function ProductsPage({
                         type="submit"
                         className="rounded-md border border-red-800 px-2 py-1 text-red-300 hover:bg-red-900/20"
                       >
-                        Delete
+                        <Trash2Icon strokeWidth={1.5} size={20} />
                       </button>
                     </form>
                   </div>

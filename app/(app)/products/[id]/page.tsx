@@ -1,4 +1,5 @@
 import { supabaseServer } from "@/utils/supabase/server";
+import { ChevronLeftIcon } from "lucide-react";
 import Link from "next/link";
 
 export default async function ProductViewPage({
@@ -25,41 +26,43 @@ export default async function ProductViewPage({
 
   return (
     <div className="space-y-6">
+      <div>
+        <Link
+          href="/products"
+          className="flex max-w-max items-center gap-2 text-neutral-300 hover:underline"
+        >
+          <ChevronLeftIcon size={16} /> Voltar
+        </Link>
+      </div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{product.name}</h1>
         <Link
           href={`/products/edit/${product.id}`}
           className="rounded-md border border-neutral-700 px-3 py-2 hover:bg-neutral-800"
         >
-          Edit
+          Editar
         </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Info
-          label="Price"
+          label="Valor"
           value={Number(product.price).toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",
           })}
         />
-        <Info label="Status" value={product.active ? "Active" : "Inactive"} />
-        <Info label="Max length (cm)" value={product.max_length_cm ?? "-"} />
-        <Info label="Max width (cm)" value={product.max_width_cm ?? "-"} />
-        <Info label="Max height (cm)" value={product.max_height_cm ?? "-"} />
+        <Info label="Status" value={product.active ? "Ativo" : "Inativo"} />
         <Info
-          label="Created at"
+          label="Comprimento máximo (cm)"
+          value={product.max_length_cm ?? "-"}
+        />
+        <Info label="Largura máxima (cm)" value={product.max_width_cm ?? "-"} />
+        <Info label="Altura máxima (cm)" value={product.max_height_cm ?? "-"} />
+        <Info
+          label="Criado em"
           value={new Date(product.created_at).toLocaleString("pt-BR")}
         />
-      </div>
-
-      <div>
-        <Link
-          href="/products"
-          className="text-sm text-neutral-300 hover:underline"
-        >
-          ← Back to list
-        </Link>
       </div>
     </div>
   );

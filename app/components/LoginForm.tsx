@@ -20,7 +20,7 @@ export default function LoginForm() {
       <p className="mb-6 text-sm text-gray-500">
         Faça login com as suas credenciais
       </p>
-      <form onSubmit={onSubmit}>
+      <form onSubmit={onSubmit} className="flex flex-col gap-2">
         <TextField
           label="Email"
           value={email}

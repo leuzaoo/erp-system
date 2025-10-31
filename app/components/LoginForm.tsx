@@ -26,6 +26,7 @@ export default function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="admin@example.com"
+          variant="dark"
         />
         <TextField
           label="Senha"
@@ -33,6 +34,7 @@ export default function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           type="password"
           placeholder="••••••••"
+          variant="dark"
         />
         <Button className="w-full" type="submit">
           Entrar

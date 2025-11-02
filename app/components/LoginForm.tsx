@@ -20,12 +20,13 @@ export default function LoginForm() {
       <p className="mb-6 text-sm text-gray-500">
         Faça login com as suas credenciais
       </p>
-      <form onSubmit={onSubmit}>
+      <form onSubmit={onSubmit} className="flex flex-col gap-2">
         <TextField
           label="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="admin@example.com"
+          variant="dark"
         />
         <TextField
           label="Senha"
@@ -33,6 +34,7 @@ export default function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           type="password"
           placeholder="••••••••"
+          variant="dark"
         />
         <Button className="w-full" type="submit">
           Entrar

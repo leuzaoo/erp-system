@@ -6,7 +6,7 @@ import KpiCard from "@/app/components/KpiCard";
 import Td from "@/app/components/TdTable";
 import Th from "@/app/components/ThTable";
 
-function fmtBRL(v: number | string) {
+function brazilianCurrency(v: number | string) {
   const n = Number(v);
   if (!Number.isFinite(n)) return "-";
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -117,7 +117,7 @@ export default async function ProductsPage({
             {products?.map((p: Product) => (
               <tr key={p.id} className="text-sm">
                 <Td>{p.name}</Td>
-                <Td>{fmtBRL(p.price)}</Td>
+                <Td>{brazilianCurrency(p.price)}</Td>
                 <Td>
                   {[
                     p.max_length_cm ?? "-",

@@ -1,4 +1,4 @@
-import { supabaseServer } from "@/utils/supabase/server";
+import { supabaseRSC } from "@/utils/supabase/rsc";
 import { ChevronLeftIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -12,7 +12,7 @@ export default async function ProductViewPage({
     return <pre className="text-red-400">ID inválido.</pre>;
   }
 
-  const supabase = await supabaseServer();
+  const supabase = await supabaseRSC();
   const { data: product, error } = await supabase
     .from("products")
     .select(

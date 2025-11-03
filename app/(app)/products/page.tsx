@@ -1,5 +1,6 @@
+export const dynamic = "force-dynamic";
 import { EyeIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import { supabaseServer } from "@/utils/supabase/server";
+import { supabaseRSC } from "@/utils/supabase/rsc";
 import Link from "next/link";
 
 import KpiCard from "@/app/components/KpiCard";
@@ -30,7 +31,7 @@ export default async function ProductsPage({
 }) {
   const q = (searchParams?.q ?? "").trim();
 
-  const supabase = await supabaseServer();
+  const supabase = await supabaseRSC();
 
   let query = supabase
     .from("products")

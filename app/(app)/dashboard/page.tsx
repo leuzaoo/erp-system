@@ -1,4 +1,4 @@
-import { supabaseServer } from "@/utils/supabase/server";
+import { supabaseRSC } from "@/utils/supabase/rsc";
 
 type OrderRow = {
   id: string;
@@ -11,7 +11,7 @@ type OrderRow = {
 };
 
 export default async function DashboardPage() {
-  const supabase = await supabaseServer();
+  const supabase = await supabaseRSC();
 
   const { data: orders, error } = await supabase
     .from("orders")

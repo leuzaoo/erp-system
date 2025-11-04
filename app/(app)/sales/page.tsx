@@ -3,26 +3,11 @@ import moment from "moment";
 import Link from "next/link";
 
 import { DataTable, type Column } from "@/app/components/Table";
+import { brazilianCurrency } from "@/utils/brazilianCurrency";
+import type { SalesTableRow } from "@/types/SalesTableRow";
 import Input from "@/app/components/TextField";
 import Button from "@/app/components/Button";
 import badgeClass from "@/utils/badgeStatus";
-
-function brazilianCurrency(v: unknown) {
-  const n = Number(v);
-  return Number.isFinite(n)
-    ? n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-    : "-";
-}
-
-type OrderRow = {
-  id: string;
-  number: string | null;
-  customer_name_snapshot: string | null;
-  seller_name_snapshot: string | null;
-  total_price: number | string;
-  status: string;
-  created_at: string;
-};
 
 export default async function SalesPage({
   searchParams,
@@ -47,11 +32,11 @@ export default async function SalesPage({
   const { data: orders, error } = await query;
   if (error) return <pre className="text-red-400">Erro: {error.message}</pre>;
 
-  const columns: Column<OrderRow>[] = [
+  const columns: Column<SalesTableRow>[] = [
     {
       header: "Pedido",
-      accessorFn: (r: OrderRow) => r.id.slice(0, 5),
-      cell: (value: unknown, row: OrderRow) => (
+      accessorFn: (r: SalesTableRow) => r.id.slice(0, 5),
+      cell: (value: unknown, row: SalesTableRow) => (
         <Link
           href={`/orders/${row.id}`}
           className="font-bold uppercase hover:underline"
@@ -74,7 +59,7 @@ export default async function SalesPage({
     {
       header: "Status",
       accessorKey: "status",
-      cell: (value: unknown) => {
+      cell: (value) => {
         const v = String(value ?? "");
         return (
           <span
@@ -94,7 +79,9 @@ export default async function SalesPage({
       accessorKey: "total_price",
       align: "right",
       cell: (value: unknown) => (
-        <span className="font-semibold">{brazilianCurrency(value)}</span>
+        <span className="font-semibold">
+          {brazilianCurrency(value as number | string)}
+        </span>
       ),
       width: 140,
     },
@@ -123,7 +110,7 @@ export default async function SalesPage({
         <Button type="submit">Buscar</Button>
       </form>
 
-      <DataTable<OrderRow>
+      <DataTable<SalesTableRow>
         columns={columns}
         data={orders ?? []}
         rowKey={(r) => r.id}

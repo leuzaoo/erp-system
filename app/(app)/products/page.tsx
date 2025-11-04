@@ -1,16 +1,12 @@
+export const dynamic = "force-dynamic";
 import { EyeIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import { supabaseServer } from "@/utils/supabase/server";
+import { supabaseRSC } from "@/utils/supabase/rsc";
 import Link from "next/link";
 
+import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import KpiCard from "@/app/components/KpiCard";
 import Td from "@/app/components/TdTable";
 import Th from "@/app/components/ThTable";
-
-function brazilianCurrency(v: number | string) {
-  const n = Number(v);
-  if (!Number.isFinite(n)) return "-";
-  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
 
 type Product = {
   id: string;
@@ -30,7 +26,7 @@ export default async function ProductsPage({
 }) {
   const q = (searchParams?.q ?? "").trim();
 
-  const supabase = await supabaseServer();
+  const supabase = await supabaseRSC();
 
   let query = supabase
     .from("products")

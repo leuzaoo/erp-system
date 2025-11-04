@@ -1,6 +1,6 @@
 "use server";
 
-import { supabaseServer } from "@/utils/supabase/server";
+import { supabaseAction } from "@/utils/supabase/action";
 import { redirect } from "next/navigation";
 
 function num(v: FormDataEntryValue | null): number | null {
@@ -14,7 +14,7 @@ function bool(v: FormDataEntryValue | null): boolean {
 }
 
 export async function createProduct(formData: FormData) {
-  const supabase = await supabaseServer();
+  const supabase = await supabaseAction();
 
   const name = String(formData.get("name") || "").trim();
   const price = num(formData.get("price"));
@@ -42,7 +42,7 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function updateProduct(id: string, formData: FormData) {
-  const supabase = await supabaseServer();
+  const supabase = await supabaseAction();
 
   const name = String(formData.get("name") || "").trim();
   const price = num(formData.get("price"));
@@ -73,7 +73,7 @@ export async function updateProduct(id: string, formData: FormData) {
 }
 
 export async function deleteProduct(id: string) {
-  const supabase = await supabaseServer();
+  const supabase = await supabaseAction();
   const { error } = await supabase.from("products").delete().eq("id", id);
   if (error) throw new Error(error.message);
   redirect("/products");

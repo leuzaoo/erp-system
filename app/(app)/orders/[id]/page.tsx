@@ -1,6 +1,11 @@
-import Card from "@/app/components/Card";
+import { BoxIcon, CalendarIcon, SpeechIcon, UserIcon } from "lucide-react";
 import { supabaseRSC } from "@/utils/supabase/rsc";
-import { CalendarIcon, SpeechIcon, UserIcon } from "lucide-react";
+
+import { brazilianCurrency } from "@/utils/brazilianCurrency";
+import type { OrderItemRow } from "@/types/OrderItemRow";
+import { OrderView } from "@/types/OrderView";
+import badgeClass from "@/utils/badgeStatus";
+import Card from "@/app/components/Card";
 
 export default async function OrderViewPage({
   params,
@@ -31,7 +36,7 @@ export default async function OrderViewPage({
     `,
     )
     .eq("id", id)
-    .single();
+    .single<OrderView>();
 
   if (orderErr) {
     return <pre className="text-red-400">Erro: {orderErr.message}</pre>;
@@ -46,12 +51,18 @@ export default async function OrderViewPage({
 
   return (
     <>
-      <section>
-        <h1 className="text-2xl">
-          {" "}
-          Pedido: <span className="font-bold">#{orderNumber}</span>
-        </h1>
-        <p className="mt-1 text-sm font-light opacity-70">Detalhes do pedido</p>
+      <section className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl">
+            {" "}
+            Pedido: <span className="font-bold">#{orderNumber}</span>
+          </h1>
+          <p className="mt-1 text-sm font-light opacity-70">
+            Detalhes do pedido
+          </p>
+        </div>
+
+        {badgeClass(order.status)}
       </section>
 
       <section>
@@ -93,6 +104,38 @@ export default async function OrderViewPage({
             </div>
           </Card>
         </div>
+      </section>
+
+      <section className="mt-4">
+        <Card>
+          <div className="flex items-center gap-2">
+            <BoxIcon />
+            <h3 className="text-xl font-bold">Itens do pedido</h3>
+          </div>
+
+          <ul className="mt-4 divide-y">
+            {order.items?.map((it: OrderItemRow) => (
+              <li key={it.id} className="flex items-start justify-between p-4">
+                <div>
+                  <div className="font-medium text-neutral-100">
+                    {it.product?.name ?? "Produto"}
+                  </div>
+                  <div className="text-sm text-neutral-400">
+                    Quantidade: {it.quantity} ×{" "}
+                    {brazilianCurrency(it.unit_price)}
+                  </div>
+                  <div className="text-xs text-neutral-500">
+                    Dimensões pedidas: {it.asked_length_cm ?? "—"} ×{" "}
+                    {it.asked_width_cm ?? "—"} × {it.asked_height_cm ?? "—"} cm
+                  </div>
+                </div>
+                <div className="text-right font-semibold">
+                  {brazilianCurrency(it.line_total)}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Card>
       </section>
     </>
   );

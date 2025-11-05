@@ -8,6 +8,7 @@ import type { SalesTableRow } from "@/types/SalesTableRow";
 import Input from "@/app/components/TextField";
 import Button from "@/app/components/Button";
 import badgeClass from "@/utils/badgeStatus";
+import { PlusIcon } from "lucide-react";
 
 export default async function SalesPage({
   searchParams,
@@ -97,7 +98,15 @@ export default async function SalesPage({
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Vendas</h1>
+      <div className="flex w-full items-center justify-between">
+        <h1 className="text-2xl font-bold">Vendas</h1>
+        <Link
+          href="/sales/new-sale"
+          className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2 text-lg font-semibold text-black"
+        >
+          <PlusIcon /> Nova venda
+        </Link>
+      </div>
 
       <form className="flex gap-2" action="/sales" method="get">
         <Input

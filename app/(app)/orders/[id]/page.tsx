@@ -3,7 +3,7 @@ import { supabaseRSC } from "@/utils/supabase/rsc";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import type { OrderItemRow } from "@/types/OrderItemRow";
-import { OrderView } from "@/types/OrderView";
+import type { OrderView } from "@/types/OrderView";
 import badgeClass from "@/utils/badgeStatus";
 import Card from "@/app/components/Card";
 
@@ -23,17 +23,25 @@ export default async function OrderViewPage({
     .from("orders")
     .select(
       `
-      id, number, status, total_price, created_at, updated_at,
-      customer_name_snapshot, seller_name_snapshot,
+        id, number, status, total_price, created_at, updated_at,
+        customer_name_snapshot, seller_name_snapshot,
 
-      items:order_items (
-        id, quantity, unit_price, line_total,
-        asked_length_cm, asked_width_cm, asked_height_cm,
-        product:products (
-          id, name, price, max_length_cm, max_width_cm, max_height_cm
+        customer:customers (
+          id, name, phone, document,
+          state, city, district, street, number, complement
+        ),
+        seller:profiles (
+          id, name
+        ),
+
+        items:order_items (
+          id, quantity, unit_price, line_total,
+          asked_length_cm, asked_width_cm, asked_height_cm,
+          product:products (
+            id, name, price, max_length_cm, max_width_cm, max_height_cm
+          )
         )
-      )
-    `,
+      `,
     )
     .eq("id", id)
     .single<OrderView>();
@@ -45,7 +53,19 @@ export default async function OrderViewPage({
     return <p className="text-neutral-300">Pedido não encontrado.</p>;
   }
 
-  const orderNumber = order.id.slice(0, 5).toUpperCase();
+  const orderNumber = (order.number ?? order.id.slice(0, 5)).toUpperCase();
+
+  const customerName =
+    order.customer?.name ?? order.customer_name_snapshot ?? "Cliente";
+  const sellerName =
+    order.seller?.name ?? order.seller_name_snapshot ?? "Vendedor";
+
+  const customerAddress = order.customer;
+
+  const createdAt = new Date(order.created_at).toLocaleString("pt-BR");
+  const updatedAt = order.updated_at
+    ? new Date(order.updated_at).toLocaleString("pt-BR")
+    : "—";
 
   console.log(order);
 
@@ -54,7 +74,6 @@ export default async function OrderViewPage({
       <section className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl">
-            {" "}
             Pedido: <span className="font-bold">#{orderNumber}</span>
           </h1>
           <p className="mt-1 text-sm font-light opacity-70">
@@ -62,7 +81,7 @@ export default async function OrderViewPage({
           </p>
         </div>
 
-        {badgeClass(order.status)}
+        <span>{badgeClass(order.status)}</span>
       </section>
 
       <section>
@@ -73,24 +92,32 @@ export default async function OrderViewPage({
               <h2 className="text-xl font-bold">Cliente</h2>
             </div>
             <div className="mt-2 flex flex-col">
-              <span>Leonardo Costa de Oliveira</span>
+              <span>{customerName}</span>
+
               <div className="mt-2 flex flex-col text-sm opacity-70">
-                <span>Jundiaí, São Paulo</span>
-                <span>Angiolina Anselmi Ermani, 203</span>
-                <span>AP 103, Torre 10</span>
+                <p>
+                  {customerAddress?.city}, {customerAddress?.state}
+                </p>
+                <p>
+                  {customerAddress?.street}, {customerAddress?.number} -{" "}
+                  {customerAddress?.district}
+                </p>
+                <p>{order.customer?.complement}</p>
               </div>
             </div>
           </Card>
+
           <Card>
             <div className="flex items-start gap-2">
               <SpeechIcon />
               <h2 className="text-xl font-bold">Vendedor</h2>
             </div>
             <div className="mt-2 flex flex-col">
-              <span>Rosa Maria da Tabuada</span>
+              <span>{sellerName}</span>
               <p className="mt-2 text-sm opacity-70">Responsável pela venda</p>
             </div>
           </Card>
+
           <Card>
             <div className="flex items-start gap-2">
               <CalendarIcon />
@@ -98,9 +125,9 @@ export default async function OrderViewPage({
             </div>
             <div className="mt-2 flex flex-col">
               <span>Data de criação</span>
-              <p className="my-2 text-sm opacity-70">17/10/2025 - 15:05</p>
+              <p className="my-2 text-sm opacity-70">{createdAt}</p>
               <span>Última alteração</span>
-              <p className="mt-2 text-sm opacity-70">17/10/2025 - 15:05</p>
+              <p className="mt-2 text-sm opacity-70">{updatedAt}</p>
             </div>
           </Card>
         </div>

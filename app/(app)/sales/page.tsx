@@ -5,7 +5,7 @@ import Link from "next/link";
 import { DataTable, type Column } from "@/app/components/Table";
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import type { SalesTableRow } from "@/types/SalesTableRow";
-import Input from "@/app/components/TextField";
+import Input from "@/app/components/Input";
 import Button from "@/app/components/Button";
 import badgeClass from "@/utils/badgeStatus";
 import { PlusIcon } from "lucide-react";

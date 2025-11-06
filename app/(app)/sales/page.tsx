@@ -1,14 +1,15 @@
 import { supabaseRSC } from "@/utils/supabase/rsc";
-import moment from "moment";
+import { PlusIcon } from "lucide-react";
 import Link from "next/link";
+import moment from "moment";
 
 import { DataTable, type Column } from "@/app/components/Table";
-import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import type { SalesTableRow } from "@/types/SalesTableRow";
-import Input from "@/app/components/Input";
+
+import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import Button from "@/app/components/Button";
 import badgeClass from "@/utils/badgeStatus";
-import { PlusIcon } from "lucide-react";
+import Input from "@/app/components/Input";
 
 export default async function SalesPage({
   searchParams,
@@ -107,7 +108,7 @@ export default async function SalesPage({
           <PlusIcon /> Nova venda
         </Link>
       </div>
-    
+
       <form className="flex gap-2" action="/sales" method="get">
         <Input
           name="q"

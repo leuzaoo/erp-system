@@ -1,23 +1,36 @@
 "use client";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 
-import { createOrder } from "@/app/(app)/sales/new-sale/actions";
-import { brazilianCurrency } from "@/utils/brazilianCurrency";
+import {
+  createOrder,
+  type CreateOrderResult,
+} from "@/app/(app)/sales/new-sale/actions";
+
+import { validateDimension } from "@/utils/validateDimension";
+
+import type { ItemErrors } from "@/types/ItemsErrors";
 import type { ItemDraft } from "@/types/ItemDraft";
 import type { Customer } from "@/types/Customer";
 import type { Product } from "@/types/Product";
 
-import Input from "@/app/components/Input";
+import ItemsSection from "@/app/components/ItemsSection";
 import Button from "@/app/components/Button";
+import Link from "next/link";
 
-type Props = {
-  customers: Customer[];
-  products: Product[];
-};
+type Props = { customers: Customer[]; products: Product[] };
 
 export default function NewSaleForm({ customers, products }: Props) {
-  const [customerId, setCustomerId] = React.useState<string>("");
+  const router = useRouter();
+
+  const [customerId, setCustomerId] = React.useState("");
   const [items, setItems] = React.useState<ItemDraft[]>([]);
+  const [errors, setErrors] = React.useState<Record<number, ItemErrors>>({});
+  const [formError, setFormError] = React.useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
+
+  const productOf = (product_id: string) =>
+    products.find((p) => p.id === product_id);
 
   const addItem = () => {
     if (!products.length) return;
@@ -28,17 +41,72 @@ export default function NewSaleForm({ customers, products }: Props) {
         product_id: p.id,
         quantity: 1,
         unit_price: Number(p.price || 0),
+        asked_length_cm: "",
+        asked_width_cm: "",
+        asked_height_cm: "",
       },
     ]);
   };
 
-  const removeItem = (idx: number) =>
+  const removeItem = (idx: number) => {
     setItems((prev) => prev.filter((_, i) => i !== idx));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[idx];
+      return next;
+    });
+  };
 
   const updateItem = (idx: number, patch: Partial<ItemDraft>) =>
     setItems((prev) =>
       prev.map((it, i) => (i === idx ? { ...it, ...patch } : it)),
     );
+
+  const onChangeProduct = (idx: number, product_id: string) => {
+    const p = productOf(product_id);
+    const base = items[idx];
+    const nextErr: ItemErrors = {
+      length: validateDimension(
+        "Comprimento",
+        base.asked_length_cm,
+        p?.max_length_cm,
+      ),
+      width: validateDimension("Largura", base.asked_width_cm, p?.max_width_cm),
+      height: validateDimension(
+        "Altura",
+        base.asked_height_cm,
+        p?.max_height_cm,
+      ),
+    };
+    setErrors((prev) => ({ ...prev, [idx]: nextErr }));
+    updateItem(idx, { product_id, unit_price: Number(p?.price || 0) });
+  };
+
+  const onChangeLength = (idx: number, next: number | "") => {
+    const pr = productOf(items[idx].product_id);
+    const msg = validateDimension("Comprimento", next, pr?.max_length_cm);
+    setErrors((prev) => ({ ...prev, [idx]: { ...prev[idx], length: msg } }));
+    updateItem(idx, { asked_length_cm: next });
+  };
+
+  const onChangeWidth = (idx: number, next: number | "") => {
+    const pr = productOf(items[idx].product_id);
+    const msg = validateDimension("Largura", next, pr?.max_width_cm);
+    setErrors((prev) => ({ ...prev, [idx]: { ...prev[idx], width: msg } }));
+    updateItem(idx, { asked_width_cm: next });
+  };
+
+  const onChangeHeight = (idx: number, next: number | "") => {
+    const pr = productOf(items[idx].product_id);
+    const msg = validateDimension("Altura", next, pr?.max_height_cm);
+    setErrors((prev) => ({ ...prev, [idx]: { ...prev[idx], height: msg } }));
+    updateItem(idx, { asked_height_cm: next });
+  };
+
+  const hasItemErrors = React.useMemo(
+    () => Object.values(errors).some((e) => e.length || e.width || e.height),
+    [errors],
+  );
 
   const total = items.reduce(
     (acc, it) => acc + Number(it.unit_price || 0) * Number(it.quantity || 0),
@@ -46,26 +114,70 @@ export default function NewSaleForm({ customers, products }: Props) {
   );
 
   const onSubmit = async () => {
+    setFormError(null);
+
+    if (!customerId) {
+      setFormError("Selecione um cliente.");
+      return;
+    }
+    if (!items.length) {
+      setFormError("Adicione ao menos um item.");
+      return;
+    }
+
+    const computed: Record<number, ItemErrors> = {};
+    items.forEach((it, idx) => {
+      const p = productOf(it.product_id);
+      computed[idx] = {
+        length: validateDimension(
+          "Comprimento",
+          it.asked_length_cm,
+          p?.max_length_cm,
+        ),
+        width: validateDimension("Largura", it.asked_width_cm, p?.max_width_cm),
+        height: validateDimension(
+          "Altura",
+          it.asked_height_cm,
+          p?.max_height_cm,
+        ),
+      };
+    });
+    const hasComputedErrors = Object.values(computed).some(
+      (e) => e.length || e.width || e.height,
+    );
+    if (hasComputedErrors) {
+      setErrors(computed);
+      setFormError(
+        "Você deve preencher os campos de dimensões antes de continuar.",
+      );
+      return;
+    }
+
+    setSubmitting(true);
     const payload = {
       customer_id: customerId,
       items: items.map((it) => ({
         product_id: it.product_id,
         quantity: Number(it.quantity),
         unit_price: Number(it.unit_price),
-        asked_length_cm:
-          it.asked_length_cm === "" ? null : Number(it.asked_length_cm ?? 0),
-        asked_width_cm:
-          it.asked_width_cm === "" ? null : Number(it.asked_width_cm ?? 0),
-        asked_height_cm:
-          it.asked_height_cm === "" ? null : Number(it.asked_height_cm ?? 0),
+        asked_length_cm: Number(it.asked_length_cm),
+        asked_width_cm: Number(it.asked_width_cm),
+        asked_height_cm: Number(it.asked_height_cm),
       })),
     };
 
-    await createOrder(payload);
+    const res: CreateOrderResult = await createOrder(payload);
+    setSubmitting(false);
+
+    if (!res.ok) {
+      setFormError(res.message);
+      return;
+    }
+    router.push(`/orders/${res.orderId}`);
   };
 
   return (
-    <form action={onSubmit} className="space-y-6">
+    <div className="space-y-6">
       <div className="grid gap-3 md:grid-cols-2">
         <div>
           <label className="mb-1 block text-sm font-bold text-white">
@@ -83,186 +195,47 @@ export default function NewSaleForm({ customers, products }: Props) {
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-neutral-500">
-            Procure cadastrar o cliente antes de abrir a venda.
-          </p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900/40">
-        <div className="flex items-center justify-between border-b border-neutral-800 p-3">
-          <div className="font-semibold">Itens do pedido</div>
-          <Button onClick={addItem} type="button">
-            + Adicionar item
+      <ItemsSection
+        items={items}
+        products={products}
+        errors={errors}
+        total={total}
+        onAddItem={addItem}
+        onRemoveItem={removeItem}
+        onChangeProduct={onChangeProduct}
+        onChangeUnitPrice={(i, v) => updateItem(i, { unit_price: Number(v) })}
+        onChangeQuantity={(i, v) => updateItem(i, { quantity: Number(v) })}
+        onChangeLength={onChangeLength}
+        onChangeWidth={onChangeWidth}
+        onChangeHeight={onChangeHeight}
+      />
+
+      {formError && (
+        <div className="rounded-md border border-red-800 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+          {formError}
+        </div>
+      )}
+
+      <div className="flex items-center gap-4">
+        <Link href="/sales">
+          <Button className="border border-white bg-transparent">
+            Cancelar
           </Button>
-        </div>
-
-        {!items.length && (
-          <div className="p-4 text-sm text-neutral-400">
-            Nenhum item adicionado.
-          </div>
-        )}
-
-        <ul className="divide-y divide-neutral-800">
-          {items.map((it, idx) => {
-            const product = products.find((p) => p.id === it.product_id);
-            const itemTotal =
-              Number(it.unit_price || 0) * Number(it.quantity || 0);
-
-            return (
-              <li key={idx} className="p-4">
-                <div className="grid gap-3 md:grid-cols-6">
-                  <div className="md:col-span-2">
-                    <label className="mb-1 block text-sm font-bold text-white">
-                      Produto
-                    </label>
-                    <select
-                      value={it.product_id}
-                      onChange={(e) => {
-                        const p = products.find(
-                          (pp) => pp.id === e.target.value,
-                        );
-                        updateItem(idx, {
-                          product_id: e.target.value,
-                          unit_price: Number(p?.price || 0),
-                        });
-                      }}
-                      className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-0 focus:ring-2 focus:ring-neutral-600"
-                    >
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
-                    {product && (
-                      <p className="mt-1 text-xs text-neutral-500">
-                        Máx (C×L×A):{" "}
-                        {[
-                          product.max_length_cm,
-                          product.max_width_cm,
-                          product.max_height_cm,
-                        ]
-                          .map((n) => (n == null ? "—" : n))
-                          .join(" × ")}{" "}
-                        cm
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Input
-                      label="Quantidade"
-                      variant="dark"
-                      type="number"
-                      min={1}
-                      value={it.quantity}
-                      onChange={(e) =>
-                        updateItem(idx, { quantity: Number(e.target.value) })
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <Input
-                      label="Preço unitário"
-                      variant="dark"
-                      type="number"
-                      step="0.01"
-                      value={it.unit_price}
-                      onChange={(e) =>
-                        updateItem(idx, { unit_price: Number(e.target.value) })
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <Input
-                      label="Comprimento (cm)"
-                      variant="dark"
-                      type="number"
-                      step="0.01"
-                      value={it.asked_length_cm ?? ""}
-                      onChange={(e) =>
-                        updateItem(idx, {
-                          asked_length_cm:
-                            e.target.value === "" ? "" : Number(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <Input
-                      label="Largura (cm)"
-                      variant="dark"
-                      type="number"
-                      step="0.01"
-                      value={it.asked_width_cm ?? ""}
-                      onChange={(e) =>
-                        updateItem(idx, {
-                          asked_width_cm:
-                            e.target.value === "" ? "" : Number(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <Input
-                      label="Altura (cm)"
-                      variant="dark"
-                      type="number"
-                      step="0.01"
-                      value={it.asked_height_cm ?? ""}
-                      onChange={(e) =>
-                        updateItem(idx, {
-                          asked_height_cm:
-                            e.target.value === "" ? "" : Number(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between">
-                  <div className="text-xs text-neutral-500">
-                    Subtotal do item
-                  </div>
-                  <div className="font-semibold">
-                    {brazilianCurrency(itemTotal)}
-                  </div>
-                </div>
-
-                <div className="mt-3 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => removeItem(idx)}
-                    className="text-sm text-red-400 hover:underline"
-                  >
-                    Remover item
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-
-        <div className="flex items-center justify-between border-t border-neutral-800 p-4">
-          <div className="text-sm text-neutral-400">Total</div>
-          <div className="text-lg font-bold">{brazilianCurrency(total)}</div>
-        </div>
-      </div>
-
-      <div className="flex gap-2">
+        </Link>
         <Button
-          type="submit"
-          disabled={!customerId || items.length === 0}
-          className="min-w-40"
+          type="button"
+          onClick={onSubmit}
+          disabled={
+            !customerId || items.length === 0 || hasItemErrors || submitting
+          }
+          className="disabled:opacity-40!"
         >
-          Salvar venda
+          {submitting ? "Salvando…" : "Salvar venda"}
         </Button>
       </div>
-    </form>
+    </div>
   );
 }

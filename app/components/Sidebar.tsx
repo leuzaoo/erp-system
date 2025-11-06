@@ -32,7 +32,7 @@ export default function Sidebar({ role }: { role: Role }) {
         <div className="text-xs text-neutral-400">MVP</div>
       </div>
 
-      <nav className="p-2">
+      <nav className="space-y-1 p-2">
         {items.map((i) => {
           const active =
             pathname === i.href || pathname.startsWith(i.href + "/");

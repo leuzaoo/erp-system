@@ -1,5 +1,6 @@
-import NewSaleForm from "@/app/components/forms/NewSaleForm";
 import { supabaseRSC } from "@/utils/supabase/rsc";
+
+import NewSaleForm from "@/app/components/forms/NewSaleForm";
 
 export const dynamic = "force-dynamic";
 

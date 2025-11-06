@@ -67,8 +67,6 @@ export default async function OrderViewPage({
     ? new Date(order.updated_at).toLocaleString("pt-BR")
     : "—";
 
-  console.log(order);
-
   return (
     <>
       <section className="flex items-center justify-between">

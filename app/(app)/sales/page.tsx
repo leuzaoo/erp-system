@@ -1,13 +1,15 @@
 import { supabaseRSC } from "@/utils/supabase/rsc";
-import moment from "moment";
+import { PlusIcon } from "lucide-react";
 import Link from "next/link";
+import moment from "moment";
 
 import { DataTable, type Column } from "@/app/components/Table";
-import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import type { SalesTableRow } from "@/types/SalesTableRow";
-import Input from "@/app/components/TextField";
+
+import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import Button from "@/app/components/Button";
 import badgeClass from "@/utils/badgeStatus";
+import Input from "@/app/components/Input";
 
 export default async function SalesPage({
   searchParams,
@@ -97,7 +99,15 @@ export default async function SalesPage({
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Vendas</h1>
+      <div className="flex w-full items-center justify-between">
+        <h1 className="text-2xl font-bold">Vendas</h1>
+        <Link
+          href="/sales/new-sale"
+          className="flex items-center gap-1 rounded-lg bg-white px-3 py-1 text-lg font-semibold text-black"
+        >
+          <PlusIcon /> Nova venda
+        </Link>
+      </div>
 
       <form className="flex gap-2" action="/sales" method="get">
         <Input

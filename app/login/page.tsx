@@ -1,6 +1,6 @@
 import { signInWithPassword } from "../(auth)/actions";
 
-import LoginForm from "../components/LoginForm";
+import LoginForm from "../components/forms/LoginForm";
 
 const LoginPage = () => {
   return (

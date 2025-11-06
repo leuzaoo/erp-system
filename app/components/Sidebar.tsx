@@ -15,7 +15,6 @@ const NAV: Item[] = [
     roles: ["admin", "vendedor", "fabrica"],
   },
   { href: "/sales", label: "Vendas", roles: ["admin", "vendedor"] },
-  { href: "/sales/new", label: "Nova venda", roles: ["admin", "vendedor"] },
   { href: "/orders", label: "Pedidos", roles: ["admin", "fabrica"] },
   { href: "/products", label: "Produtos", roles: ["admin"] },
   { href: "/customers", label: "Clientes", roles: ["admin", "vendedor"] },
@@ -33,7 +32,7 @@ export default function Sidebar({ role }: { role: Role }) {
         <div className="text-xs text-neutral-400">MVP</div>
       </div>
 
-      <nav className="p-2">
+      <nav className="space-y-1 p-2">
         {items.map((i) => {
           const active =
             pathname === i.href || pathname.startsWith(i.href + "/");

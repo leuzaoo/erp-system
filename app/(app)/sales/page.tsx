@@ -102,12 +102,12 @@ export default async function SalesPage({
         <h1 className="text-2xl font-bold">Vendas</h1>
         <Link
           href="/sales/new-sale"
-          className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2 text-lg font-semibold text-black"
+          className="flex items-center gap-1 rounded-lg bg-white px-3 py-1 text-lg font-semibold text-black"
         >
           <PlusIcon /> Nova venda
         </Link>
       </div>
-
+    
       <form className="flex gap-2" action="/sales" method="get">
         <Input
           name="q"

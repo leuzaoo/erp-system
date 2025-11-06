@@ -1,9 +1,8 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { supabaseAction } from "@/utils/supabase/action";
 
-type CreateOrderPayload = {
+export type CreateOrderPayload = {
   customer_id: string;
   items: Array<{
     product_id: string;
@@ -15,7 +14,13 @@ type CreateOrderPayload = {
   }>;
 };
 
-export async function createOrder(payload: CreateOrderPayload) {
+export type CreateOrderResult =
+  | { ok: true; orderId: string }
+  | { ok: false; message: string };
+
+export async function createOrder(
+  payload: CreateOrderPayload,
+): Promise<CreateOrderResult> {
   const supabase = await supabaseAction();
 
   const {
@@ -23,11 +28,11 @@ export async function createOrder(payload: CreateOrderPayload) {
     error: userErr,
   } = await supabase.auth.getUser();
   if (userErr || !user) {
-    redirect("/login");
+    return { ok: false, message: "Sessão expirada. Faça login novamente." };
   }
 
   if (!payload.customer_id || !payload.items?.length) {
-    throw new Error("Informe o cliente e ao menos um item.");
+    return { ok: false, message: "Informe o cliente e ao menos um item." };
   }
 
   const [{ data: customer }, { data: sellerProfile }] = await Promise.all([
@@ -52,11 +57,11 @@ export async function createOrder(payload: CreateOrderPayload) {
       customer_name_snapshot: customerName,
       seller_name_snapshot: sellerName,
     })
-    .select("id, number")
+    .select("id")
     .single();
 
   if (orderErr) {
-    throw new Error(orderErr.message);
+    return { ok: false, message: orderErr.message };
   }
 
   const itemsToInsert = payload.items.map((it) => ({
@@ -74,8 +79,8 @@ export async function createOrder(payload: CreateOrderPayload) {
     .insert(itemsToInsert);
 
   if (itemsErr) {
-    throw new Error(itemsErr.message);
+    return { ok: false, message: itemsErr.message };
   }
 
-  redirect(`/orders/${createdOrder!.id}`);
+  return { ok: true, orderId: createdOrder!.id };
 }

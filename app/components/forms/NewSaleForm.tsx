@@ -1,6 +1,8 @@
 "use client";
-import { useRouter } from "next/navigation";
 import * as React from "react";
+import { useRouter } from "next/navigation";
+import { PlusIcon } from "lucide-react";
+import Link from "next/link";
 
 import {
   createOrder,
@@ -14,20 +16,82 @@ import type { ItemDraft } from "@/types/ItemDraft";
 import type { Customer } from "@/types/Customer";
 import type { Product } from "@/types/Product";
 
+import NewCustomerForm from "@/app/components/forms/NewCustomerForm";
 import ItemsSection from "@/app/components/ItemsSection";
 import Button from "@/app/components/Button";
-import Link from "next/link";
 
 type Props = { customers: Customer[]; products: Product[] };
 
 export default function NewSaleForm({ customers, products }: Props) {
   const router = useRouter();
 
+  const [customerDropdownOpen, setCustomerDropdownOpen] = React.useState(false);
+  const [customerList, setCustomerList] = React.useState(customers);
+  const [customerModal, setCustomerModal] = React.useState(false);
+  const [customerSearch, setCustomerSearch] = React.useState("");
   const [customerId, setCustomerId] = React.useState("");
-  const [items, setItems] = React.useState<ItemDraft[]>([]);
+
   const [errors, setErrors] = React.useState<Record<number, ItemErrors>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
+  const [items, setItems] = React.useState<ItemDraft[]>([]);
   const [submitting, setSubmitting] = React.useState(false);
+
+  const customerBoxRef = React.useRef<HTMLDivElement | null>(null);
+
+  const filteredCustomers = React.useMemo(() => {
+    const term = customerSearch.trim().toLowerCase();
+    if (!term) return [];
+    return customerList.filter((c) => c.name.toLowerCase().includes(term));
+  }, [customerSearch, customerList]);
+
+  React.useEffect(() => {
+    if (!customerId) return;
+    const selected = customerList.find((c) => c.id === customerId);
+    if (selected) setCustomerSearch(selected.name);
+  }, [customerId, customerList]);
+
+  React.useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        customerBoxRef.current &&
+        !customerBoxRef.current.contains(e.target as Node)
+      ) {
+        setCustomerDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const toggleCustomerModal = () => setCustomerModal((v) => !v);
+
+  const handleCustomerCreated = (customer: { id: string; name: string }) => {
+    setCustomerList((prev) => [customer, ...prev]);
+    setCustomerId(customer.id);
+    setCustomerSearch(customer.name);
+    setCustomerDropdownOpen(false);
+  };
+
+  const handleSelectCustomer = (customer: Customer) => {
+    setCustomerId(customer.id);
+    setCustomerSearch(customer.name);
+    setCustomerDropdownOpen(false);
+  };
+
+  const handleCustomerSearchChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const value = e.target.value;
+    setCustomerSearch(value);
+
+    setCustomerId("");
+
+    if (value.trim()) {
+      setCustomerDropdownOpen(true);
+    } else {
+      setCustomerDropdownOpen(false);
+    }
+  };
 
   const productOf = (product_id: string) =>
     products.find((p) => p.id === product_id);
@@ -178,23 +242,68 @@ export default function NewSaleForm({ customers, products }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-4">
         <div>
-          <label className="mb-1 block text-sm font-bold text-white">
-            Cliente
-          </label>
-          <select
-            value={customerId}
-            onChange={(e) => setCustomerId(e.target.value)}
-            className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-0 focus:ring-2 focus:ring-neutral-600"
-          >
-            <option value="">Selecione um cliente…</option>
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex w-full flex-col">
+            <label className="mb-1 block text-sm font-bold text-white">
+              Cliente
+            </label>
+            <div className="flex w-3/5 items-center gap-4">
+              <div ref={customerBoxRef} className="relative w-full">
+                <input
+                  type="text"
+                  value={customerSearch}
+                  onChange={handleCustomerSearchChange}
+                  onFocus={() => {
+                    if (customerSearch.trim()) {
+                      setCustomerDropdownOpen(true);
+                    }
+                  }}
+                  placeholder="Digite o nome do cliente..."
+                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-0 focus:ring-2 focus:ring-neutral-600"
+                />
+
+                {customerDropdownOpen && filteredCustomers.length > 0 && (
+                  <ul className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-neutral-700 bg-neutral-900 text-sm shadow-lg">
+                    {filteredCustomers.map((c) => (
+                      <li key={c.id}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleSelectCustomer(c);
+                          }}
+                          className={[
+                            "flex w-full items-center justify-between px-3 py-2 text-left hover:bg-neutral-800",
+                            c.id === customerId ? "bg-neutral-800" : "",
+                          ]
+                            .join(" ")
+                            .trim()}
+                        >
+                          <span>{c.name}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <Button
+                className="flex w-full max-w-max items-center gap-2 border border-blue-500"
+                onClick={toggleCustomerModal}
+                type="button"
+              >
+                <PlusIcon size={16} /> Novo cliente
+              </Button>
+            </div>
+
+            {customerModal && (
+              <NewCustomerForm
+                closeModal={toggleCustomerModal}
+                onCreated={handleCustomerCreated}
+              />
+            )}
+          </div>
         </div>
       </div>
 
@@ -219,7 +328,7 @@ export default function NewSaleForm({ customers, products }: Props) {
         </div>
       )}
 
-      <div className="flex items-center gap-4">
+      <div className="flex w-full items-center gap-4">
         <Link href="/sales">
           <Button className="border border-white bg-transparent">
             Cancelar

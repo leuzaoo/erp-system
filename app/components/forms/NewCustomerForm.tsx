@@ -1,10 +1,10 @@
 import * as React from "react";
-
-import { createCustomerAction } from "@/app/(app)/customers/actions";
-
-import Button from "../Button";
-import Input from "../Input";
 import { Loader2Icon, XIcon } from "lucide-react";
+
+import { createCustomerAction } from "@/app/actions/customer-actions";
+
+import Button from "@/app/components/Button";
+import Input from "@/app/components/Input";
 
 interface NewCustomerFormProps {
   closeModal: () => void;

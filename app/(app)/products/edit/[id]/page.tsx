@@ -43,7 +43,7 @@ export default async function ProductEditPage({
 
   async function action(formData: FormData) {
     "use server";
-    const { updateProduct } = await import("../../actions");
+    const { updateProduct } = await import("../../../../actions/product-actions");
     await updateProduct(product?.id, formData);
   }
 

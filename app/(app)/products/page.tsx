@@ -151,7 +151,7 @@ export default async function ProductsPage({
                     <form
                       action={async () => {
                         "use server";
-                        const { deleteProduct } = await import("./actions");
+                        const { deleteProduct } = await import("../../actions/product-actions");
                         await deleteProduct(p.id);
                       }}
                     >

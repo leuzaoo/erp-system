@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   createOrder,
   type CreateOrderResult,
-} from "@/app/(app)/sales/new-sale/actions";
+} from "@/app/actions/new-sale-actions";
 
 import { validateDimension } from "@/utils/validateDimension";
 

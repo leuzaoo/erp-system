@@ -1,4 +1,4 @@
-import { createProduct } from "../actions";
+import { createProduct } from "../../../actions/product-actions";
 
 export default function NewProductPage() {
   return (

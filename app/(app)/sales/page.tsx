@@ -7,38 +7,70 @@ import { DataTable, type Column } from "@/app/components/Table";
 import type { SalesTableRow } from "@/types/SalesTableRow";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
-import Button from "@/app/components/Button";
 import badgeClass from "@/utils/badgeStatus";
+
+import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
+
+type SearchParams = {
+  q?: string;
+};
 
 export default async function SalesPage({
   searchParams,
 }: {
-  searchParams: { q?: string };
+  searchParams: Promise<SearchParams>;
 }) {
-  const q = (searchParams?.q ?? "").trim();
+  const { q: qParam = "" } = await searchParams;
+  const rawQ = qParam.trim();
+
   const supabase = await supabaseRSC();
 
-  let query = supabase
+  const { data: orders, error } = await supabase
     .from("orders")
     .select(
       "id, number, customer_name_snapshot, seller_name_snapshot, total_price, status, created_at",
     )
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(200);
 
-  if (q) {
-    query = query.or(`customer_name_snapshot.ilike.%${q}%,number.ilike.%${q}%`);
+  if (error) {
+    return <pre className="text-red-400">Erro: {error.message}</pre>;
   }
 
-  const { data: orders, error } = await query;
-  if (error) return <pre className="text-red-400">Erro: {error.message}</pre>;
+  const normalize = (value: string | null | undefined): string =>
+    (value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+  let filtered = orders ?? [];
+
+  if (rawQ) {
+    const q = normalize(rawQ.replace(/^#/, ""));
+
+    filtered = filtered.filter((o) => {
+      const customer = normalize(o.customer_name_snapshot);
+      const seller = normalize(o.seller_name_snapshot);
+      const number = normalize(o.number);
+      const idFull = normalize(o.id);
+      const idShort = normalize(o.id.slice(0, 5));
+
+      return (
+        customer.includes(q) ||
+        seller.includes(q) ||
+        number.includes(q) ||
+        idShort.includes(q) ||
+        idFull.includes(q)
+      );
+    });
+  }
 
   const columns: Column<SalesTableRow>[] = [
     {
       header: "Pedido",
-      accessorFn: (r: SalesTableRow) => r.id.slice(0, 5),
-      cell: (value: unknown, row: SalesTableRow) => (
+      accessorFn: (r) => r.id.slice(0, 5),
+      cell: (value, row) => (
         <Link
           href={`/orders/${row.id}`}
           className="font-bold uppercase hover:underline"
@@ -51,12 +83,12 @@ export default async function SalesPage({
     {
       header: "Cliente",
       accessorKey: "customer_name_snapshot",
-      cell: (value: unknown) => (value ?? "—") as string,
+      cell: (value) => (value ?? "—") as string,
     },
     {
       header: "Vendedor",
       accessorKey: "seller_name_snapshot",
-      cell: (value: unknown) => (value ?? "—") as string,
+      cell: (value) => (value ?? "—") as string,
     },
     {
       header: "Status",
@@ -80,7 +112,7 @@ export default async function SalesPage({
       header: "Valor",
       accessorKey: "total_price",
       align: "right",
-      cell: (value: unknown) => (
+      cell: (value) => (
         <span className="font-semibold">
           {brazilianCurrency(value as number | string)}
         </span>
@@ -91,8 +123,7 @@ export default async function SalesPage({
       header: "Criado",
       accessorKey: "created_at",
       align: "right",
-      cell: (value: unknown) =>
-        moment(String(value)).format("DD/MM/YYYY - HH:mm"),
+      cell: (value) => moment(String(value)).format("DD/MM/YYYY - HH:mm"),
       width: 170,
     },
   ];
@@ -113,18 +144,18 @@ export default async function SalesPage({
         <Input
           name="q"
           type="text"
-          placeholder="Busque por cliente ou nº de venda…"
+          placeholder="Busque por cliente, nº de venda ou código…"
           variant="dark"
-          defaultValue={q}
+          defaultValue={rawQ}
         />
         <Button type="submit">Buscar</Button>
       </form>
 
       <DataTable<SalesTableRow>
         columns={columns}
-        data={orders ?? []}
+        data={filtered}
         rowKey={(r) => r.id}
-        caption={q ? `Resultados para: “${q}”` : undefined}
+        caption={rawQ ? `Resultados para: “${rawQ}”` : undefined}
         emptyMessage="Nenhuma venda encontrada."
         zebra
         stickyHeader

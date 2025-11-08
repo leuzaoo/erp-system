@@ -23,18 +23,28 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
 
     const name = String(form.get("name") || "").trim();
     const document = String(form.get("document") || "").trim() || undefined;
-    const phone = String(form.get("phone") || "").trim() || undefined;
-    const state = String(form.get("state") || "").trim() || undefined;
-    const city = String(form.get("city") || "").trim() || undefined;
-    const district = String(form.get("district") || "").trim() || undefined;
-    const street = String(form.get("street") || "").trim() || undefined;
-    const number = String(form.get("number") || "").trim() || undefined;
+    const phone = String(form.get("phone") || "").trim();
+    const state = String(form.get("state") || "").trim();
+    const city = String(form.get("city") || "").trim();
+    const district = String(form.get("district") || "").trim();
+    const street = String(form.get("street") || "").trim();
+    const number = String(form.get("number") || "").trim();
     const complement = String(form.get("complement") || "").trim() || undefined;
-    const postal_code =
-      String(form.get("postal_code") || "").trim() || undefined;
+    const postal_code = String(form.get("postal_code") || "").trim();
 
-    if (!name) {
-      setError("Nome do cliente é obrigatório.");
+    if (
+      !name ||
+      !phone ||
+      !state ||
+      !city ||
+      !district ||
+      !street ||
+      !number ||
+      !postal_code
+    ) {
+      setError(
+        "Por favor, preencha todos os campos obrigatórios (*) antes de salvar.",
+      );
       return;
     }
 
@@ -86,22 +96,22 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
         <form onSubmit={handleSubmit} className="space-y-3">
           <Input name="name" label="Nome*" variant="dark" required autoFocus />
           <Input name="document" label="Documento" variant="dark" />
-          <Input name="phone" label="Telefone" variant="dark" />
+          <Input name="phone" label="Telefone*" variant="dark" />
 
           <div className="grid grid-cols-2 gap-3">
-            <Input name="state" label="Estado" variant="dark" />
-            <Input name="city" label="Cidade" variant="dark" />
+            <Input name="state" label="Estado*" variant="dark" />
+            <Input name="city" label="Cidade*" variant="dark" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Input name="district" label="Bairro" variant="dark" />
-            <Input name="postal_code" label="CEP" variant="dark" />
+            <Input name="district" label="Bairro*" variant="dark" />
+            <Input name="postal_code" label="CEP*" variant="dark" />
           </div>
 
-          <Input name="street" label="Rua" variant="dark" />
+          <Input name="street" label="Rua*" variant="dark" />
 
           <div className="grid grid-cols-2 gap-3">
-            <Input name="number" label="Número" variant="dark" />
+            <Input name="number" label="Número*" variant="dark" />
             <Input name="complement" label="Complemento" variant="dark" />
           </div>
 

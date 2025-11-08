@@ -64,7 +64,7 @@ export function DataTable<T>({
                 style={{ width: c.width }}
                 className={clsx(
                   pad,
-                  "border-b border-neutral-800 text-left font-medium",
+                  "border-b border-neutral-800 text-left text-base font-bold",
                   c.align === "center" && "text-center",
                   c.align === "right" && "text-right",
                   c.headerClassName,

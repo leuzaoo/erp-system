@@ -138,23 +138,29 @@ export default async function OrderViewPage({
             <h3 className="text-xl font-bold">Itens do pedido</h3>
           </div>
 
-          <ul className="mt-4 divide-y">
+          <ul className="mt-4 divide-y divide-neutral-800">
             {order.items?.map((it: OrderItemRow) => (
-              <li key={it.id} className="flex items-start justify-between p-4">
-                <div>
-                  <div className="font-medium text-neutral-100">
+              <li
+                key={it.id}
+                className="flex items-start justify-between py-4 first:pt-0 last:pb-0"
+              >
+                <div className="space-y-1">
+                  <div className="text-base font-medium text-neutral-100">
                     {it.product?.name ?? "Produto"}
                   </div>
+
                   <div className="text-sm text-neutral-400">
                     Quantidade: {it.quantity} ×{" "}
                     {brazilianCurrency(it.unit_price)}
                   </div>
+
                   <div className="text-xs text-neutral-500">
                     Dimensões pedidas: {it.asked_length_cm ?? "—"} ×{" "}
                     {it.asked_width_cm ?? "—"} × {it.asked_height_cm ?? "—"} cm
                   </div>
                 </div>
-                <div className="text-right font-semibold">
+
+                <div className="text-right font-semibold text-neutral-200">
                   {brazilianCurrency(it.line_total)}
                 </div>
               </li>

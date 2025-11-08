@@ -1,14 +1,10 @@
-import { supabaseRSC } from "@/utils/supabase/rsc";
+import type { OrderRow } from "@/types/OrderRow";
 
-type OrderRow = {
-  id: string;
-  number: string | null;
-  created_at: string;
-  status: string;
-  total_price: number | string;
-  customer_id: string;
-  seller_id: string;
-};
+import { brazilianCurrency } from "@/utils/brazilianCurrency";
+import { supabaseRSC } from "@/utils/supabase/rsc";
+import badgeClass from "@/utils/badgeStatus";
+
+import { DataTable } from "@/app/components/Table";
 
 export default async function DashboardPage() {
   const supabase = await supabaseRSC();
@@ -16,7 +12,7 @@ export default async function DashboardPage() {
   const { data: orders, error } = await supabase
     .from("orders")
     .select(
-      "id, number, created_at, status, total_price, customer_id, seller_id",
+      "id, number, customer_name_snapshot, seller_name_snapshot,created_at, status, total_price, customer_id, seller_id",
     )
     .order("created_at", { ascending: false })
     .limit(10);
@@ -35,46 +31,43 @@ export default async function DashboardPage() {
 
       {!!orders?.length && (
         <div className="overflow-x-auto rounded-lg border border-neutral-800">
-          <table className="w-full border-collapse">
-            <thead className="bg-neutral-900/60">
-              <tr className="text-left text-sm text-neutral-300">
-                <th className="border-b border-neutral-800 p-3">Pedido</th>
-                <th className="border-b border-neutral-800 p-3">
-                  Cliente (id)
-                </th>
-                <th className="border-b border-neutral-800 p-3">
-                  Vendedor (id)
-                </th>
-                <th className="border-b border-neutral-800 p-3">Status</th>
-                <th className="border-b border-neutral-800 p-3">Valor</th>
-                <th className="border-b border-neutral-800 p-3">Criado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((o: OrderRow) => (
-                <tr key={o.id} className="text-sm">
-                  <td className="border-b border-neutral-900 p-3">
-                    {o.number ?? o.id.slice(0, 8)}
-                  </td>
-                  <td className="border-b border-neutral-900 p-3">
-                    {o.customer_id.slice(0, 8)}…
-                  </td>
-                  <td className="border-b border-neutral-900 p-3">
-                    {o.seller_id.slice(0, 8)}…
-                  </td>
-                  <td className="border-b border-neutral-900 p-3">
-                    {o.status}
-                  </td>
-                  <td className="border-b border-neutral-900 p-3">
-                    R$ {Number(o.total_price).toFixed(2)}
-                  </td>
-                  <td className="border-b border-neutral-900 p-3">
-                    {new Date(o.created_at).toLocaleDateString("pt-BR")}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable<OrderRow>
+            data={orders}
+            rowKey={(row) => row.id}
+            emptyMessage="Nenhum pedido encontrado."
+            columns={[
+              {
+                header: "Pedido",
+                cell: (_, row) => (
+                  <p className="font-bold">
+                    #{(row.number ?? row.id.slice(0, 5)).toUpperCase()}
+                  </p>
+                ),
+              },
+              {
+                header: "Cliente (id)",
+                cell: (_, row) => <span>{row.customer_name_snapshot}</span>,
+              },
+              {
+                header: "Vendedor (id)",
+                cell: (_, row) => <span>{row.seller_name_snapshot}</span>,
+              },
+              {
+                header: "Status",
+                cell: (_, row) => badgeClass(row.status),
+              },
+              {
+                header: "Valor",
+                align: "right",
+                cell: (_, row) => brazilianCurrency(row.total_price),
+              },
+              {
+                header: "Criado",
+                cell: (_, row) =>
+                  new Date(row.created_at).toLocaleDateString("pt-BR"),
+              },
+            ]}
+          />
         </div>
       )}
     </>

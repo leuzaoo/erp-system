@@ -109,8 +109,8 @@ export default async function ProductsPage({
             className={
               "inline-flex items-center rounded-full px-2 py-0.5 text-xs " +
               (isActive
-                ? "border border-green-800 bg-green-900/30 text-green-300"
-                : "border border-red-800 bg-red-900/30 text-red-300")
+                ? "border border-green-800 bg-green-600/20 text-green-800"
+                : "border border-red-800 bg-red-600/20 text-red-800")
             }
           >
             {isActive ? "Ativo" : "Inativo"}

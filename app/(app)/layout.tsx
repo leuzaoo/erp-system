@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import Link from "next/link";
 
 import { supabaseRSC } from "@/utils/supabase/rsc";
 import { signOut } from "../actions/logout-action";
@@ -35,7 +34,6 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <Sidebar role={profile.role as "admin" | "vendedor" | "fabrica"} />
 
         <div className="min-w-0 flex-1">
-          {/* Header */}
           <header className="sticky top-0 z-10 border-b border-neutral-800 bg-neutral-900/70 backdrop-blur">
             <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
               <div className="text-sm text-neutral-400">
@@ -56,12 +54,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          {/* Content */}
           <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
-
-          <footer className="mx-auto max-w-6xl px-4 py-6 text-xs text-neutral-500">
-            <Link href="/">ERP MVP</Link> • {new Date().getFullYear()}
-          </footer>
         </div>
       </div>
     </div>

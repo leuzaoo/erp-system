@@ -1,11 +1,19 @@
-import { BoxIcon, CalendarIcon, SpeechIcon, UserIcon } from "lucide-react";
+import {
+  BoxIcon,
+  CalendarIcon,
+  MoveLeftIcon,
+  SpeechIcon,
+  UserIcon,
+} from "lucide-react";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import type { OrderItemRow } from "@/types/OrderItemRow";
 import type { OrderView } from "@/types/OrderView";
+
 import badgeClass from "@/utils/badgeStatus";
 import Card from "@/app/components/Card";
+import Link from "next/link";
 
 export default async function OrderViewPage({
   params,
@@ -13,13 +21,18 @@ export default async function OrderViewPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+
   if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
-    return <pre className="text-red-400">ID inválido.</pre>;
+    return (
+      <p className="mt-10 text-center text-sm text-red-400">
+        ID de pedido inválido.
+      </p>
+    );
   }
 
   const supabase = await supabaseRSC();
 
-  const { data: order, error: orderErr } = await supabase
+  const { data: order, error } = await supabase
     .from("orders")
     .select(
       `
@@ -44,13 +57,36 @@ export default async function OrderViewPage({
       `,
     )
     .eq("id", id)
-    .single<OrderView>();
+    .maybeSingle<OrderView>();
 
-  if (orderErr) {
-    return <pre className="text-red-400">Erro: {orderErr.message}</pre>;
-  }
   if (!order) {
-    return <p className="text-neutral-300">Pedido não encontrado.</p>;
+    return (
+      <div className="mt-10 flex flex-col items-center justify-center text-center">
+        <h1 className="text-4xl font-semibold text-white">
+          Pedido não encontrado
+        </h1>
+        <p className="text-neutral-400">
+          Este pedido não existe mais ou nunca existiu. Verifique o código
+          informado ou volte para a lista de pedidos.
+        </p>
+
+        <Link
+          href="/sales"
+          className="mt-5 flex items-center gap-2 rounded px-4 py-2 text-blue-500 hover:underline"
+        >
+          <MoveLeftIcon size={16} />
+          Página de pedidos
+        </Link>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <p className="mt-10 text-center text-sm text-red-400">
+        Erro ao carregar os dados do pedido.
+      </p>
+    );
   }
 
   const orderNumber = (order.number ?? order.id.slice(0, 5)).toUpperCase();
@@ -100,7 +136,7 @@ export default async function OrderViewPage({
                   {customerAddress?.street}, {customerAddress?.number} -{" "}
                   {customerAddress?.district}
                 </p>
-                <p>{order.customer?.complement}</p>
+                <p>{customerAddress?.complement}</p>
               </div>
             </div>
           </Card>
@@ -140,27 +176,21 @@ export default async function OrderViewPage({
 
           <ul className="mt-4 divide-y divide-neutral-800">
             {order.items?.map((it: OrderItemRow) => (
-              <li
-                key={it.id}
-                className="flex items-start justify-between py-4 first:pt-0 last:pb-0"
-              >
-                <div className="space-y-1">
-                  <div className="text-base font-medium text-neutral-100">
+              <li key={it.id} className="flex items-end justify-between py-4">
+                <div>
+                  <div className="font-medium text-neutral-100">
                     {it.product?.name ?? "Produto"}
                   </div>
-
                   <div className="text-sm text-neutral-400">
                     Quantidade: {it.quantity} ×{" "}
                     {brazilianCurrency(it.unit_price)}
                   </div>
-
                   <div className="text-xs text-neutral-500">
                     Dimensões pedidas: {it.asked_length_cm ?? "—"} ×{" "}
                     {it.asked_width_cm ?? "—"} × {it.asked_height_cm ?? "—"} cm
                   </div>
                 </div>
-
-                <div className="text-right font-semibold text-neutral-200">
+                <div className="text-right font-semibold">
                   {brazilianCurrency(it.line_total)}
                 </div>
               </li>

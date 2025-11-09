@@ -6,13 +6,13 @@ export default function Home() {
       <h1 className="text-4xl">Homepage</h1>
       <div className="mt-5 flex flex-col gap-2">
         <Link
-          className="rounded-3xl bg-white px-3 py-1 text-2xl tracking-tight text-black"
+          className="bg-pattern-100 rounded-3xl px-3 py-1 text-2xl tracking-tight text-black"
           href="/dashboard"
         >
           Go to Dashboard
         </Link>
         <Link
-          className="rounded-3xl bg-white px-3 py-1 text-2xl tracking-tight text-black"
+          className="bg-pattern-100 rounded-3xl px-3 py-1 text-2xl tracking-tight text-black"
           href="/login"
         >
           Go to Login

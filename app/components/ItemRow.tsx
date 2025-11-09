@@ -45,13 +45,13 @@ export default function ItemRow({
       <div className="flex flex-col gap-3">
         <div className="flex w-full items-start justify-between gap-4">
           <div className="w-full md:col-span-2">
-            <label className="mb-1 block text-sm font-bold text-white">
+            <label className="text-darker mb-1 block text-sm font-bold">
               Produto
             </label>
             <select
               value={it.product_id}
               onChange={(e) => onChangeProduct(idx, e.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-0 focus:ring-2 focus:ring-neutral-600"
+              className="bg-pattern-100 text-darker w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-0 focus:ring-2 focus:ring-neutral-600"
             >
               {products.map((pp) => (
                 <option key={pp.id} value={pp.id}>
@@ -72,7 +72,6 @@ export default function ItemRow({
           <div className="w-full">
             <Input
               label="Preço unitário"
-              variant="dark"
               type="number"
               step="0.01"
               value={it.unit_price}
@@ -83,7 +82,6 @@ export default function ItemRow({
           <div className="w-full">
             <Input
               label="Quantidade"
-              variant="dark"
               type="number"
               min={1}
               value={it.quantity}
@@ -96,7 +94,6 @@ export default function ItemRow({
           <div className="w-full">
             <Input
               label="Comprimento (cm)"
-              variant="dark"
               type="number"
               step="0.01"
               value={it.asked_length_cm ?? ""}
@@ -119,7 +116,6 @@ export default function ItemRow({
           <div className="w-full">
             <Input
               label="Largura (cm)"
-              variant="dark"
               type="number"
               step="0.01"
               value={it.asked_width_cm ?? ""}
@@ -142,7 +138,6 @@ export default function ItemRow({
           <div className="w-full">
             <Input
               label="Altura (cm)"
-              variant="dark"
               type="number"
               step="0.01"
               value={it.asked_height_cm ?? ""}

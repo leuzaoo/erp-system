@@ -19,6 +19,7 @@ import type { Product } from "@/types/Product";
 import NewCustomerForm from "@/app/components/forms/NewCustomerForm";
 import ItemsSection from "@/app/components/ItemsSection";
 import Button from "@/app/components/Button";
+import Input from "../Input";
 
 type Props = { customers: Customer[]; products: Product[] };
 
@@ -241,16 +242,14 @@ export default function NewSaleForm({ customers, products }: Props) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mb-10">
       <div className="grid gap-4">
         <div>
           <div className="flex w-full flex-col">
-            <label className="mb-1 block text-sm font-bold text-white">
-              Cliente
-            </label>
-            <div className="flex w-3/5 items-center gap-4">
+            <div className="flex max-w-xl items-end gap-4">
               <div ref={customerBoxRef} className="relative w-full">
-                <input
+                <Input
+                  label="Cliente"
                   type="text"
                   value={customerSearch}
                   onChange={handleCustomerSearchChange}
@@ -260,7 +259,6 @@ export default function NewSaleForm({ customers, products }: Props) {
                     }
                   }}
                   placeholder="Digite o nome do cliente..."
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-0 focus:ring-2 focus:ring-neutral-600"
                 />
 
                 {customerDropdownOpen && filteredCustomers.length > 0 && (
@@ -330,9 +328,7 @@ export default function NewSaleForm({ customers, products }: Props) {
 
       <div className="flex w-full items-center gap-4">
         <Link href="/sales">
-          <Button className="border border-white bg-transparent">
-            Cancelar
-          </Button>
+          <Button variant="outline">Cancelar</Button>
         </Link>
         <Button
           type="button"

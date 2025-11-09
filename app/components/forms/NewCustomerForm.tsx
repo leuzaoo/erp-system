@@ -76,11 +76,9 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-xl border border-neutral-700 bg-neutral-900 p-6 shadow-2xl">
+      <div className="bg-lighter text-darker w-full max-w-lg rounded-xl border p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">
-            Cadastrar cliente
-          </h2>
+          <h2 className="text-xl font-bold">Cadastrar cliente</h2>
           <XIcon
             onClick={closeModal}
             className="cursor-pointer opacity-50 hover:opacity-100"
@@ -94,33 +92,29 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          <Input name="name" label="Nome*" variant="dark" required autoFocus />
-          <Input name="document" label="Documento" variant="dark" />
-          <Input name="phone" label="Telefone*" variant="dark" />
+          <Input name="name" label="Nome*" required autoFocus />
+          <Input name="document" label="Documento" />
+          <Input name="phone" label="Telefone*" />
 
           <div className="grid grid-cols-2 gap-3">
-            <Input name="state" label="Estado*" variant="dark" />
-            <Input name="city" label="Cidade*" variant="dark" />
+            <Input name="state" label="Estado*" />
+            <Input name="city" label="Cidade*" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Input name="district" label="Bairro*" variant="dark" />
-            <Input name="postal_code" label="CEP*" variant="dark" />
+            <Input name="district" label="Bairro*" />
+            <Input name="postal_code" label="CEP*" />
           </div>
 
-          <Input name="street" label="Rua*" variant="dark" />
+          <Input name="street" label="Rua*" />
 
           <div className="grid grid-cols-2 gap-3">
-            <Input name="number" label="Número*" variant="dark" />
-            <Input name="complement" label="Complemento" variant="dark" />
+            <Input name="number" label="Número*" />
+            <Input name="complement" label="Complemento" />
           </div>
 
           <div className="mt-5 flex justify-end gap-3">
-            <Button
-              type="button"
-              onClick={closeModal}
-              className="border border-neutral-600 bg-transparent text-sm hover:bg-neutral-500/15"
-            >
+            <Button type="button" onClick={closeModal} variant="outline">
               Cancelar
             </Button>
             <Button

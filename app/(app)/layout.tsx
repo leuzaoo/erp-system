@@ -5,6 +5,7 @@ import { supabaseRSC } from "@/utils/supabase/rsc";
 import { signOut } from "../actions/logout-action";
 
 import Sidebar from "../components/Sidebar";
+import { LogOutIcon } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -29,32 +30,30 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100">
+    <div className="min-h-screen">
       <div className="flex">
         <Sidebar role={profile.role as "admin" | "vendedor" | "fabrica"} />
 
         <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-10 border-b border-neutral-800 bg-neutral-900/70 backdrop-blur">
-            <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-              <div className="text-sm text-neutral-400">
-                Logado como{" "}
-                <span className="font-medium text-neutral-200">
-                  {profile.name}
-                </span>{" "}
-                • <span className="uppercase">{profile.role}</span>
+          <header className="border-pattern-200 sticky top-0 z-50 border-b backdrop-blur">
+            <div className="mx-auto flex h-14 items-center justify-between px-6">
+              <div className="text-sm">
+                <span className="capitalize">{profile.role}</span> •{" "}
+                <span className="font-bold">{profile.name}</span>
               </div>
               <form action={signOut}>
                 <button
                   type="submit"
-                  className="rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm hover:bg-neutral-700"
+                  className="text-lighter cursor-pointer rounded-2xl border border-red-400 bg-red-600 p-2 hover:opacity-80"
+                  title="Sair"
                 >
-                  Sair
+                  <LogOutIcon />
                 </button>
               </form>
             </div>
           </header>
 
-          <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+          <main className="mx-auto px-6 pt-4">{children}</main>
         </div>
       </div>
     </div>

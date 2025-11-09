@@ -18,7 +18,7 @@ const NAV: Item[] = [
   { href: "/orders", label: "Pedidos", roles: ["admin", "fabrica"] },
   { href: "/products", label: "Produtos", roles: ["admin"] },
   { href: "/customers", label: "Clientes", roles: ["admin", "vendedor"] },
-  // { href: "/users",   label: "Usuários",  roles: ["admin"] }, // todo: quando for criar
+  { href: "/users", label: "Usuários", roles: ["admin"] },
 ];
 
 export default function Sidebar({ role }: { role: Role }) {
@@ -26,13 +26,12 @@ export default function Sidebar({ role }: { role: Role }) {
   const items = NAV.filter((i) => i.roles.includes(role));
 
   return (
-    <aside className="sticky top-0 h-screen w-60 shrink-0 border-r border-neutral-800 bg-neutral-900/60 backdrop-blur">
-      <div className="border-b border-neutral-800 px-4 py-4">
-        <div className="text-lg font-semibold">ERP</div>
-        <div className="text-xs text-neutral-400">MVP</div>
+    <aside className="text-darker border-pattern-200 sticky top-0 h-screen w-60 shrink-0 border-r">
+      <div className="px-6 pt-6">
+        <span className="text-3xl font-bold">ERP</span>
       </div>
 
-      <nav className="space-y-1 p-2">
+      <nav className="mt-4 flex flex-col gap-2 space-y-1 p-2">
         {items.map((i) => {
           const active =
             pathname === i.href || pathname.startsWith(i.href + "/");
@@ -41,10 +40,10 @@ export default function Sidebar({ role }: { role: Role }) {
               key={i.href}
               href={i.href}
               className={clsx(
-                "block rounded-md border px-3 py-2 text-sm",
+                "block rounded-md px-4 py-3",
                 active
-                  ? "border-neutral-700 bg-neutral-800 text-neutral-100"
-                  : "border-transparent text-neutral-300 hover:bg-neutral-800/60 hover:text-neutral-100",
+                  ? "bg-darker text-lighter font-semibold"
+                  : "text-medium hover:bg-pattern-100",
               )}
             >
               {i.label}

@@ -44,25 +44,25 @@ export default function ItemsSection({
     products.find((p) => p.id === product_id);
 
   return (
-    <div className="rounded-xl border border-neutral-800 bg-neutral-900/40">
-      <div className="flex items-center justify-between border-b border-neutral-800 p-3">
+    <div className="rounded-xl bg-white shadow-md">
+      <div className="border-pattern-200 flex items-center justify-between border-b p-3">
         <div className="font-semibold">Itens do pedido</div>
         <Button
           onClick={onAddItem}
-          className="flex items-center gap-2 bg-white text-black!"
           type="button"
+          className="bg-darker hover:bg-pattern-700 font-bold! shadow-sm"
         >
           <PlusIcon size={16} /> Adicionar item
         </Button>
       </div>
 
       {!items.length && (
-        <div className="p-4 text-sm text-neutral-400">
+        <div className="text-pattern-400 p-4 text-sm">
           Nenhum item adicionado.
         </div>
       )}
 
-      <ul className="divide-y divide-neutral-800">
+      <ul className="divide-pattern-200 divide-y">
         {items.map((it, idx) => (
           <ItemRow
             key={idx}
@@ -82,8 +82,8 @@ export default function ItemsSection({
         ))}
       </ul>
 
-      <div className="flex items-center justify-between border-t border-neutral-800 p-4">
-        <div className="text-sm text-neutral-400">Total</div>
+      <div className="border-pattern-200 flex items-center justify-between border-t p-4">
+        <div className="text-pattern-400 text-sm">Total</div>
         <div className="text-lg font-bold">{brazilianCurrency(total)}</div>
       </div>
     </div>

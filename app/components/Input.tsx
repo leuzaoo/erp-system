@@ -15,8 +15,9 @@ export default function Input({
   const baseClasses =
     "w-full rounded-md px-3 py-2 text-sm outline-0 focus:ring-2 transition";
   const variants = {
-    light: "bg-gray-100 text-gray-900 focus:ring-blue-500 placeholder-gray-500",
-    dark: "bg-neutral-900 text-white border border-neutral-700 focus:ring-neutral-600 placeholder-neutral-400",
+    light:
+      "bg-pattern-100 focus:ring-blue-500 placeholder-pattern-300 border border-pattern-200",
+    dark: "bg-medium text-white border border-pattern-800 focus:ring-pattern-800 placeholder-pattern-300",
   };
 
   return (

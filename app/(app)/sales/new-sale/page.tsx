@@ -1,8 +1,8 @@
+export const dynamic = "force-dynamic";
+
 import { supabaseRSC } from "@/utils/supabase/rsc";
 
 import NewSaleForm from "@/app/components/forms/NewSaleForm";
-
-export const dynamic = "force-dynamic";
 
 export default async function NewSalePage() {
   const supabase = await supabaseRSC();

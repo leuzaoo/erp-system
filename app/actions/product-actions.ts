@@ -1,6 +1,7 @@
 "use server";
 
 import { supabaseAction } from "@/utils/supabase/action";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 function num(v: FormDataEntryValue | null): number | null {
@@ -72,9 +73,60 @@ export async function updateProduct(id: string, formData: FormData) {
   redirect(`/products/${id}`);
 }
 
-export async function deleteProduct(id: string) {
+export async function deleteProduct(id: string): Promise<{
+  ok: boolean;
+  reason?: "HAS_ORDERS" | "GENERIC";
+  message?: string;
+}> {
   const supabase = await supabaseAction();
+
   const { error } = await supabase.from("products").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-  redirect("/products");
+
+  if (!error) {
+    revalidatePath("/products");
+    return { ok: true };
+  }
+
+  const isFK =
+    error.code === "23503" ||
+    /violates foreign key constraint.*order_items_product_id_fkey/i.test(
+      error.message,
+    );
+
+  if (isFK) {
+    return {
+      ok: false,
+      reason: "HAS_ORDERS",
+      message:
+        "Esse produto está relacionado a um pedido e não pode ser deletado.",
+    };
+  }
+
+  return {
+    ok: false,
+    reason: "GENERIC",
+    message: error.message ?? "Erro ao deletar produto.",
+  };
+}
+
+export async function deactivateProduct(id: string): Promise<{
+  ok: boolean;
+  message?: string;
+}> {
+  const supabase = await supabaseAction();
+
+  const { error } = await supabase
+    .from("products")
+    .update({ active: false })
+    .eq("id", id);
+
+  if (error) {
+    return {
+      ok: false,
+      message: error.message ?? "Erro ao inativar produto.",
+    };
+  }
+
+  revalidatePath("/products");
+  return { ok: true };
 }

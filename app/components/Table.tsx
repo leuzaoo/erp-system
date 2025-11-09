@@ -40,20 +40,20 @@ export function DataTable<T>({
   return (
     <div
       className={clsx(
-        "overflow-x-auto rounded-lg border border-neutral-800",
+        "border-pattern-200 overflow-x-auto rounded-md shadow",
         className,
       )}
     >
-      <table className="w-full border-collapse">
+      <table className="w-full">
         {caption && (
-          <caption className="p-3 text-left text-sm text-neutral-400">
+          <caption className="text-darker mb-4 text-left text-sm">
             {caption}
           </caption>
         )}
 
         <thead
           className={clsx(
-            "bg-neutral-900/60 text-sm text-neutral-300",
+            "text-darker bg-pattern-200 text-sm",
             stickyHeader && "sticky top-0 z-10",
           )}
         >
@@ -64,7 +64,7 @@ export function DataTable<T>({
                 style={{ width: c.width }}
                 className={clsx(
                   pad,
-                  "border-b border-neutral-800 text-left text-base font-bold",
+                  "border-pattern-200 border-b text-left text-base font-bold",
                   c.align === "center" && "text-center",
                   c.align === "right" && "text-right",
                   c.headerClassName,
@@ -80,7 +80,7 @@ export function DataTable<T>({
           {!data?.length && (
             <tr>
               <td
-                className={clsx(pad, "text-neutral-400")}
+                className={clsx(pad, "text-red-600")}
                 colSpan={columns.length}
               >
                 {emptyMessage}
@@ -93,8 +93,7 @@ export function DataTable<T>({
               key={rowKey(row, idx)}
               className={clsx(
                 "text-sm transition",
-                zebra && idx % 2 === 1 ? "bg-neutral-900/30" : "bg-transparent",
-                "hover:bg-neutral-900/50",
+                zebra && idx % 2 === 1 ? "bg-pattern-100/80" : "bg-transparent",
               )}
             >
               {columns.map((c, ci) => {
@@ -109,7 +108,7 @@ export function DataTable<T>({
                     key={ci}
                     className={clsx(
                       pad,
-                      "border-b border-neutral-900",
+                      "",
                       c.align === "center" && "text-center",
                       c.align === "right" && "text-right",
                       c.className,

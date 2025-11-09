@@ -1,5 +1,5 @@
 import { supabaseRSC } from "@/utils/supabase/rsc";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, SearchIcon } from "lucide-react";
 import Link from "next/link";
 import moment from "moment";
 
@@ -134,28 +134,39 @@ export default async function SalesPage({
         <h1 className="text-2xl font-bold">Vendas</h1>
         <Link
           href="/sales/new-sale"
-          className="flex items-center gap-1 rounded-lg bg-white px-3 py-1 text-lg font-semibold text-black"
+          className="text-lighter flex items-center gap-1 rounded-md bg-blue-600 px-4 py-2 font-semibold hover:bg-blue-500"
         >
-          <PlusIcon /> Nova venda
+          <PlusIcon size={20} /> Nova venda
         </Link>
       </div>
 
-      <form className="flex gap-2" action="/sales" method="get">
+      <form className="flex max-w-lg gap-2" action="/sales" method="get">
         <Input
           name="q"
           type="text"
           placeholder="Busque por cliente, nº de venda ou código…"
-          variant="dark"
           defaultValue={rawQ}
         />
-        <Button type="submit">Buscar</Button>
+        <Button
+          type="submit"
+          className="bg-darker! hover:bg-pattern-700! border-pattern-400! text-lighter! flex items-center gap-2 border"
+        >
+          <SearchIcon size={16} />
+          Pesquisar
+        </Button>
       </form>
 
       <DataTable<SalesTableRow>
         columns={columns}
         data={filtered}
         rowKey={(r) => r.id}
-        caption={rawQ ? `Resultados para: “${rawQ}”` : undefined}
+        caption={
+          rawQ ? (
+            <p>
+              Resultados para: “<span className="font-bold">{rawQ}</span>”.
+            </p>
+          ) : undefined
+        }
         emptyMessage="Nenhuma venda encontrada."
         zebra
         stickyHeader

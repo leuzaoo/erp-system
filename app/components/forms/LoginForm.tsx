@@ -18,7 +18,7 @@ export default function LoginForm() {
   return (
     <Card className="mx-auto max-w-md text-center">
       <h1 className="text-lg font-bold">Sofa sellers</h1>
-      <p className="mb-6 text-sm text-gray-500">
+      <p className="text-pattern mb-6 text-sm">
         Faça login com as suas credenciais
       </p>
       <form onSubmit={onSubmit} className="flex flex-col gap-2">
@@ -27,7 +27,6 @@ export default function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="admin@example.com"
-          variant="dark"
         />
         <TextField
           label="Senha"
@@ -35,9 +34,8 @@ export default function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           type="password"
           placeholder="••••••••"
-          variant="dark"
         />
-        <Button className="w-full" type="submit">
+        <Button disabled={!email || !password} className="w-full" type="submit">
           Entrar
         </Button>
       </form>

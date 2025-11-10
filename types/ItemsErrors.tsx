@@ -1,5 +1,5 @@
 export type ItemErrors = {
-  length?: string;
-  width?: string;
-  height?: string;
+  length?: string | number;
+  width?: string | number;
+  height?: string | number;
 };

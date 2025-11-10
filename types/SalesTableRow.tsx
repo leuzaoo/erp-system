@@ -1,5 +1,7 @@
 export type SalesTableRow = {
   id: string;
+  seller_id: string;
+  customer_id: string;
   number: string | null;
   customer_name_snapshot: string | null;
   seller_name_snapshot: string | null;

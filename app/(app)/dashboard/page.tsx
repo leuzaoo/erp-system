@@ -31,10 +31,6 @@ export default async function DashboardPage() {
       <h1 className="mb-4 text-2xl font-bold">Dashboard</h1>
 
       {!orders?.length && (
-        <p className="text-pattern-800">Nenhum pedido encontrado.</p>
-      )}
-
-      {!!orders?.length && (
         <DataTable<OrderRow>
           data={orders}
           rowKey={(row) => row.id}

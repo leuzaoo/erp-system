@@ -188,7 +188,7 @@ export default async function OrderViewPage({
             {order.items?.map((it: OrderItemRow) => (
               <li key={it.id} className="flex items-end justify-between py-4">
                 <div>
-                  <div className="font-medium text-neutral-100">
+                  <div className="font-bold">
                     {it.product?.name ?? "Produto"}
                   </div>
                   <div className="text-sm text-neutral-400">

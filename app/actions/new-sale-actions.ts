@@ -65,13 +65,20 @@ export async function createOrder(
   const customerName = customer?.name ?? "Cliente";
   const sellerName = sellerProfile?.name ?? "Vendedor";
 
+  const itemsWithLineTotal = payload.items.map((it) => ({
+    ...it,
+    line_total: it.quantity * it.unit_price,
+  }));
+
+  const total = itemsWithLineTotal.reduce((acc, it) => acc + it.line_total, 0);
+
   const { data: createdOrder, error: orderErr } = await supabase
     .from("orders")
     .insert({
       customer_id: payload.customer_id,
       seller_id: user.id,
-      status: "EM_ESPERA",
-      total_price: 0,
+      status: "ENVIADO",
+      total_price: total,
       customer_name_snapshot: customerName,
       seller_name_snapshot: sellerName,
     })
@@ -87,7 +94,7 @@ export async function createOrder(
 
   const orderId = createdOrder.id;
 
-  const itemsToInsert = payload.items.map((it) => ({
+  const itemsToInsert = itemsWithLineTotal.map((it) => ({
     order_id: orderId,
     product_id: it.product_id,
     quantity: it.quantity,
@@ -98,7 +105,7 @@ export async function createOrder(
       typeof it.asked_width_cm === "number" ? it.asked_width_cm : null,
     asked_height_cm:
       typeof it.asked_height_cm === "number" ? it.asked_height_cm : null,
-    line_total: it.quantity * it.unit_price,
+    line_total: it.line_total,
   }));
 
   const { error: itemsErr } = await supabase
@@ -110,26 +117,7 @@ export async function createOrder(
       ok: false,
       message:
         itemsErr.message ||
-        "Erro ao dicionar itens do pedido. Nenhum item foi salvo.",
-    };
-  }
-
-  const total = itemsToInsert.reduce((acc, it) => acc + it.line_total, 0);
-
-  const { error: updateErr } = await supabase
-    .from("orders")
-    .update({
-      total_price: total,
-      status: "ENVIADO",
-    })
-    .eq("id", orderId);
-
-  if (updateErr) {
-    return {
-      ok: false,
-      message:
-        updateErr?.message ||
-        "Pedido criado, mas houve um erro ao atualizar o total/status.",
+        "Erro ao adicionar itens do pedido. Nenhum item foi salvo.",
     };
   }
 

@@ -2,74 +2,77 @@ import { PlusIcon, SearchIcon } from "lucide-react";
 import Link from "next/link";
 import moment from "moment";
 
-import { canEditOrder, type AppRole } from "@/utils/permissions";
+import type { SalesTableRow } from "@/types/SalesTableRow";
+
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import { supabaseRSC } from "@/utils/supabase/rsc";
-import badgeClass from "@/utils/badgeStatus";
+import {
+  ORDER_STATUS_BADGE_CLASS,
+  ORDER_STATUS_LABELS,
+} from "@/utils/orderStatus";
 
 import { DataTable, type Column } from "@/app/components/Table";
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
 
-type SalesTableRow = {
-  id: string;
-  number: string | null;
-  customer_name_snapshot: string | null;
-  seller_name_snapshot: string | null;
-  seller_id: string | null;
-  total_price: number;
-  status: string;
-  created_at: string;
+type SearchParams = {
+  q?: string;
 };
 
 export default async function SalesPage({
   searchParams,
 }: {
-  searchParams: { q?: string };
+  searchParams: Promise<SearchParams>;
 }) {
-  const q = (searchParams?.q ?? "").trim();
+  const { q: qParam = "" } = await searchParams;
+  const rawQ = qParam.trim();
+
   const supabase = await supabaseRSC();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return <pre className="text-red-400">Não autenticado.</pre>;
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  const role = (profile?.role ?? "vendedor") as AppRole;
-
-  let query = supabase
+  const { data: orders, error } = await supabase
     .from("orders")
     .select(
-      "id, number, customer_name_snapshot, seller_name_snapshot, seller_id, total_price, status, created_at",
+      "id, number, customer_name_snapshot, seller_name_snapshot, customer_id, seller_id, total_price, status, created_at",
     )
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(200);
 
-  if (q) {
-    const like = `%${q}%`;
-    query = query.or(
-      `customer_name_snapshot.ilike.${like},number.ilike.${like}`,
-    );
-  }
-
-  const { data: orders, error } = await query;
   if (error) {
     return <pre className="text-red-400">Erro: {error.message}</pre>;
+  }
+
+  const normalize = (value: string | null | undefined): string =>
+    (value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+  let filtered = orders ?? [];
+
+  if (rawQ) {
+    const q = normalize(rawQ.replace(/^#/, ""));
+
+    filtered = filtered.filter((o) => {
+      const customer = normalize(o.customer_name_snapshot);
+      const seller = normalize(o.seller_name_snapshot);
+      const number = normalize(o.number);
+      const idFull = normalize(o.id);
+      const idShort = normalize(o.id.slice(0, 5));
+
+      return (
+        customer.includes(q) ||
+        seller.includes(q) ||
+        number.includes(q) ||
+        idShort.includes(q) ||
+        idFull.includes(q)
+      );
+    });
   }
 
   const columns: Column<SalesTableRow>[] = [
     {
       header: "Pedido",
-      accessorFn: (r) => r.number ?? r.id.slice(0, 5),
+      accessorFn: (r) => r.id.slice(0, 5),
       cell: (value, row) => (
         <Link
           href={`/orders/${row.id}`}
@@ -78,7 +81,7 @@ export default async function SalesPage({
           #{String(value)}
         </Link>
       ),
-      width: 120,
+      width: 140,
     },
     {
       header: "Cliente",
@@ -93,65 +96,39 @@ export default async function SalesPage({
     {
       header: "Status",
       accessorKey: "status",
-      width: 140,
       cell: (value) => {
-        const v = String(value ?? "");
+        const status = String(value ?? "");
+
         return (
           <span
             className={
-              "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium " +
-              badgeClass(v.toUpperCase())
+              "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium " +
+              (ORDER_STATUS_BADGE_CLASS[status] ?? "border border-neutral-700")
             }
           >
-            {v.toUpperCase().replaceAll("_", " ")}
+            {ORDER_STATUS_LABELS[status] ?? status}
           </span>
         );
       },
+      width: 140,
     },
     {
       header: "Valor",
       accessorKey: "total_price",
       align: "right",
-      width: 140,
       cell: (value) => (
         <span className="font-semibold">
-          {brazilianCurrency(value as number)}
+          {brazilianCurrency(value as number | string)}
         </span>
       ),
+      width: 140,
     },
     {
       header: "Criado",
       accessorKey: "created_at",
       align: "right",
-      width: 170,
       cell: (value) => moment(String(value)).format("DD/MM/YYYY - HH:mm"),
-    },
-  ];
-
-  const columnsWithEdit: Column<SalesTableRow>[] = [
-    ...columns,
-    {
-      header: "",
-      align: "right",
-      width: 80,
-      cell: (_, row) => {
-        const canEdit = canEditOrder({
-          role,
-          userId: user.id,
-          sellerId: row.seller_id,
-        });
-
-        if (!canEdit) return null;
-
-        return (
-          <Link
-            href={`/orders/${row.id}/edit`}
-            className="rounded-md border border-neutral-400 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-200"
-          >
-            Editar
-          </Link>
-        );
-      },
+      width: 170,
     },
   ];
 
@@ -161,9 +138,9 @@ export default async function SalesPage({
         <h1 className="text-2xl font-bold">Vendas</h1>
         <Link
           href="/sales/new-sale"
-          className="flex items-center gap-1 rounded-lg bg-white px-3 py-1 text-lg font-semibold text-black hover:bg-neutral-200"
+          className="text-lighter flex items-center gap-1 rounded-md bg-blue-600 px-4 py-2 font-semibold hover:bg-blue-500"
         >
-          <PlusIcon /> Nova venda
+          <PlusIcon size={20} /> Nova venda
         </Link>
       </div>
 
@@ -172,20 +149,29 @@ export default async function SalesPage({
           name="q"
           type="text"
           placeholder="Busque por cliente, nº de venda ou código…"
-          defaultValue={q}
+          defaultValue={rawQ}
         />
-        <Button type="submit" className="flex items-center bg-darker">
+        <Button
+          type="submit"
+          className="bg-darker! hover:bg-pattern-700! border-pattern-400! text-lighter! flex items-center gap-2 border"
+        >
           <SearchIcon size={16} />
           Pesquisar
         </Button>
       </form>
 
       <DataTable<SalesTableRow>
-        columns={columnsWithEdit}
-        data={orders ?? []}
+        columns={columns}
+        data={filtered}
         rowKey={(r) => r.id}
-        caption={q ? `Resultados para: “${q}”` : undefined}
-        emptyMessage="Nenhuma venda cadastrada."
+        caption={
+          rawQ ? (
+            <p>
+              Resultados para: “<span className="font-bold">{rawQ}</span>”.
+            </p>
+          ) : undefined
+        }
+        emptyMessage="Nenhuma venda encontrada."
         zebra
         stickyHeader
       />

@@ -1,4 +1,4 @@
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, SearchIcon } from "lucide-react";
 import Link from "next/link";
 import moment from "moment";
 
@@ -167,14 +167,17 @@ export default async function SalesPage({
         </Link>
       </div>
 
-      <form className="flex gap-2" action="/sales" method="get">
+      <form className="flex max-w-lg gap-2" action="/sales" method="get">
         <Input
           name="q"
           type="text"
           placeholder="Busque por cliente, nº de venda ou código…"
           defaultValue={q}
         />
-        <Button type="submit">Pesquisar</Button>
+        <Button type="submit" className="flex items-center bg-darker">
+          <SearchIcon size={16} />
+          Pesquisar
+        </Button>
       </form>
 
       <DataTable<SalesTableRow>

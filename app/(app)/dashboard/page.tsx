@@ -1,11 +1,15 @@
+import Link from "next/link";
+
 import type { OrderRow } from "@/types/OrderRow";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import { supabaseRSC } from "@/utils/supabase/rsc";
-import badgeClass from "@/utils/badgeStatus";
+import {
+  ORDER_STATUS_LABELS,
+  ORDER_STATUS_BADGE_CLASS,
+} from "@/utils/orderStatus";
 
 import { DataTable } from "@/app/components/Table";
-import Link from "next/link";
 
 export default async function DashboardPage() {
   const supabase = await supabaseRSC();
@@ -57,7 +61,17 @@ export default async function DashboardPage() {
             },
             {
               header: "Status",
-              cell: (_, row) => badgeClass(row.status),
+              cell: (_, row) => (
+                <span
+                  className={
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium " +
+                    (ORDER_STATUS_BADGE_CLASS[row.status] ??
+                      "border border-neutral-700")
+                  }
+                >
+                  {ORDER_STATUS_LABELS[row.status] ?? row.status}
+                </span>
+              ),
             },
             {
               header: "Valor",

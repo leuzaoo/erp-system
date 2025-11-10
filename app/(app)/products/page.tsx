@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { PlusIcon, SearchIcon } from "lucide-react";
 import Link from "next/link";
 
+import { ProductHandleActions } from "@/app/actions/product-handle-actions";
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 
@@ -10,7 +11,6 @@ import { DataTable, type Column } from "@/app/components/Table";
 import KpiCard from "@/app/components/KpiCard";
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
-import { ProductActions } from "./ProductActions";
 
 type Product = {
   id: string;
@@ -23,48 +23,67 @@ type Product = {
   created_at: string;
 };
 
+type SearchParams = {
+  q?: string;
+};
+
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: { q?: string };
+  searchParams: Promise<SearchParams>;
 }) {
-  const q = (searchParams?.q ?? "").trim();
+  const { q: qParam = "" } = await searchParams;
+  const rawQ = qParam.trim();
 
   const supabase = await supabaseRSC();
 
-  let query = supabase
+  const { data: products, error } = await supabase
     .from("products")
     .select(
       "id, name, price, active, max_length_cm, max_width_cm, max_height_cm, created_at",
     )
     .order("created_at", { ascending: false })
-    .limit(50);
-
-  if (q) {
-    query = query.ilike("name", `%${q}%`);
-  }
-
-  const [{ data: products, error }, totalRes, activeRes, inactiveRes] =
-    await Promise.all([
-      query,
-      supabase.from("products").select("*", { count: "exact", head: true }),
-      supabase
-        .from("products")
-        .select("*", { count: "exact", head: true })
-        .eq("active", true),
-      supabase
-        .from("products")
-        .select("*", { count: "exact", head: true })
-        .eq("active", false),
-    ]);
+    .limit(200);
 
   if (error) {
     return <pre className="text-red-400">Erro: {error.message}</pre>;
   }
 
+  const [totalRes, activeRes, inactiveRes] = await Promise.all([
+    supabase.from("products").select("*", { count: "exact", head: true }),
+    supabase
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .eq("active", true),
+    supabase
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .eq("active", false),
+  ]);
+
   const total = totalRes.count ?? 0;
   const active = activeRes.count ?? 0;
   const inactive = inactiveRes.count ?? 0;
+
+  const normalize = (value: string | null | undefined): string =>
+    (value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+  let filtered: Product[] = products ?? [];
+
+  if (rawQ) {
+    const q = normalize(rawQ.replace(/^#/, ""));
+
+    filtered = filtered.filter((p) => {
+      const name = normalize(p.name);
+      const idFull = normalize(p.id);
+      const idShort = normalize(p.id.slice(0, 5));
+
+      return name.includes(q) || idFull.includes(q) || idShort.includes(q);
+    });
+  }
 
   const columns: Column<Product>[] = [
     {
@@ -123,7 +142,7 @@ export default async function ProductsPage({
       align: "right",
       cell: (_, row) => {
         const p = row as Product;
-        return <ProductActions id={p.id} />;
+        return <ProductHandleActions id={p.id} />;
       },
     },
   ];
@@ -152,8 +171,8 @@ export default async function ProductsPage({
         <Input
           type="text"
           name="q"
-          defaultValue={q}
-          placeholder="Procurar produtos..."
+          defaultValue={rawQ}
+          placeholder="Busque por nome ou código do produto…"
         />
         <Button
           type="submit"
@@ -166,11 +185,12 @@ export default async function ProductsPage({
 
       <DataTable<Product>
         columns={columns}
-        data={products ?? []}
+        data={filtered}
         rowKey={(p) => p.id}
         emptyMessage="Nenhum produto encontrado."
         zebra
         stickyHeader
+        caption={rawQ ? `Resultados para: “${rawQ}”.` : undefined}
       />
     </div>
   );

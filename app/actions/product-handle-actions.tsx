@@ -4,16 +4,14 @@ import * as React from "react";
 import { EyeIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 
-import {
-  deleteProduct,
-  deactivateProduct,
-} from "../../actions/product-actions";
+import { deleteProduct, deactivateProduct } from "./product-actions";
+import Button from "@/app/components/Button";
 
 type Props = {
   id: string;
 };
 
-export function ProductActions({ id }: Props) {
+export function ProductHandleActions({ id }: Props) {
   const [showModal, setShowModal] = React.useState(false);
   const [submitting, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
@@ -91,22 +89,23 @@ export function ProductActions({ id }: Props) {
             )}
 
             <div className="mt-2 flex justify-center gap-3">
-              <button
+              <Button
                 type="button"
                 onClick={() => setShowModal(false)}
                 disabled={submitting}
-                className="rounded-md border border-neutral-600 px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-800 disabled:opacity-50"
+                variant="outline"
+                className="text-lighter border-white"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={handleDeactivate}
                 disabled={submitting}
                 className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
               >
                 Tornar inativo
-              </button>
+              </Button>
             </div>
           </div>
         </div>

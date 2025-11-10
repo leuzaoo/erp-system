@@ -182,7 +182,7 @@ export default async function SalesPage({
         data={orders ?? []}
         rowKey={(r) => r.id}
         caption={q ? `Resultados para: “${q}”` : undefined}
-        emptyMessage="Nenhuma venda encontrada."
+        emptyMessage="Nenhuma venda cadastrada."
         zebra
         stickyHeader
       />

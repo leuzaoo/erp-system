@@ -80,7 +80,7 @@ export function DataTable<T>({
           {!data?.length && (
             <tr>
               <td
-                className={clsx(pad, "text-red-600")}
+                className={clsx(pad, "")}
                 colSpan={columns.length}
               >
                 {emptyMessage}

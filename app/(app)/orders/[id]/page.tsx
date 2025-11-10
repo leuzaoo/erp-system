@@ -11,9 +11,13 @@ import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import type { OrderItemRow } from "@/types/OrderItemRow";
 import type { OrderView } from "@/types/OrderView";
 
-import badgeClass from "@/utils/badgeStatus";
 import Card from "@/app/components/Card";
 import Link from "next/link";
+import {
+  ORDER_STATUS_BADGE_CLASS,
+  ORDER_STATUS_LABELS,
+  type OrderStatus,
+} from "@/utils/orderStatus";
 
 export default async function OrderViewPage({
   params,
@@ -103,6 +107,8 @@ export default async function OrderViewPage({
     ? new Date(order.updated_at).toLocaleString("pt-BR")
     : "—";
 
+  const status = order.status as OrderStatus;
+
   return (
     <>
       <section className="flex items-center justify-between">
@@ -115,7 +121,11 @@ export default async function OrderViewPage({
           </p>
         </div>
 
-        <span>{badgeClass(order.status)}</span>
+        <p
+          className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${ORDER_STATUS_BADGE_CLASS[status]}`}
+        >
+          {ORDER_STATUS_LABELS[status] ?? status}
+        </p>
       </section>
 
       <section>

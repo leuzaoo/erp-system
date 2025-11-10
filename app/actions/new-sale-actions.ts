@@ -27,6 +27,7 @@ export async function createOrder(
     data: { user },
     error: userErr,
   } = await supabase.auth.getUser();
+
   if (userErr || !user) {
     return { ok: false, message: "Sessão expirada. Faça login novamente." };
   }
@@ -35,7 +36,10 @@ export async function createOrder(
     return { ok: false, message: "Informe o cliente e ao menos um item." };
   }
 
-  const [{ data: customer }, { data: sellerProfile }] = await Promise.all([
+  const [
+    { data: customer, error: customerErr },
+    { data: sellerProfile, error: sellerErr },
+  ] = await Promise.all([
     supabase
       .from("customers")
       .select("name")
@@ -43,6 +47,20 @@ export async function createOrder(
       .single(),
     supabase.from("profiles").select("name").eq("id", user.id).single(),
   ]);
+
+  if (customerErr) {
+    return {
+      ok: false,
+      message: "Não foi possível carregar os dados do cliente.",
+    };
+  }
+
+  if (sellerErr) {
+    return {
+      ok: false,
+      message: "Não foi possível carregar os dados do vendedor.",
+    };
+  }
 
   const customerName = customer?.name ?? "Cliente";
   const sellerName = sellerProfile?.name ?? "Vendedor";
@@ -52,7 +70,7 @@ export async function createOrder(
     .insert({
       customer_id: payload.customer_id,
       seller_id: user.id,
-      status: "ENVIADO",
+      status: "EM_ESPERA",
       total_price: 0,
       customer_name_snapshot: customerName,
       seller_name_snapshot: sellerName,
@@ -60,18 +78,27 @@ export async function createOrder(
     .select("id")
     .single();
 
-  if (orderErr) {
-    return { ok: false, message: orderErr.message };
+  if (orderErr || !createdOrder) {
+    return {
+      ok: false,
+      message: orderErr?.message || "Erro ao criar o pedido.",
+    };
   }
 
+  const orderId = createdOrder.id;
+
   const itemsToInsert = payload.items.map((it) => ({
-    order_id: createdOrder!.id,
+    order_id: orderId,
     product_id: it.product_id,
     quantity: it.quantity,
     unit_price: it.unit_price,
-    asked_length_cm: it.asked_length_cm ?? null,
-    asked_width_cm: it.asked_width_cm ?? null,
-    asked_height_cm: it.asked_height_cm ?? null,
+    asked_length_cm:
+      typeof it.asked_length_cm === "number" ? it.asked_length_cm : null,
+    asked_width_cm:
+      typeof it.asked_width_cm === "number" ? it.asked_width_cm : null,
+    asked_height_cm:
+      typeof it.asked_height_cm === "number" ? it.asked_height_cm : null,
+    line_total: it.quantity * it.unit_price,
   }));
 
   const { error: itemsErr } = await supabase
@@ -79,8 +106,32 @@ export async function createOrder(
     .insert(itemsToInsert);
 
   if (itemsErr) {
-    return { ok: false, message: itemsErr.message };
+    return {
+      ok: false,
+      message:
+        itemsErr.message ||
+        "Erro ao dicionar itens do pedido. Nenhum item foi salvo.",
+    };
   }
 
-  return { ok: true, orderId: createdOrder!.id };
+  const total = itemsToInsert.reduce((acc, it) => acc + it.line_total, 0);
+
+  const { error: updateErr } = await supabase
+    .from("orders")
+    .update({
+      total_price: total,
+      status: "ENVIADO",
+    })
+    .eq("id", orderId);
+
+  if (updateErr) {
+    return {
+      ok: false,
+      message:
+        updateErr?.message ||
+        "Pedido criado, mas houve um erro ao atualizar o total/status.",
+    };
+  }
+
+  return { ok: true, orderId };
 }

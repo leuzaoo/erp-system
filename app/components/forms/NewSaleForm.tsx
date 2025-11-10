@@ -242,7 +242,7 @@ export default function NewSaleForm({ customers, products }: Props) {
   };
 
   return (
-    <div className="space-y-6 mb-10">
+    <div className="mb-10 space-y-6">
       <div className="grid gap-4">
         <div>
           <div className="flex w-full flex-col">
@@ -262,7 +262,7 @@ export default function NewSaleForm({ customers, products }: Props) {
                 />
 
                 {customerDropdownOpen && filteredCustomers.length > 0 && (
-                  <ul className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-neutral-700 bg-neutral-900 text-sm shadow-lg">
+                  <ul className="divide-pattern-200 bg-pattern-100 absolute z-20 mt-1 max-h-60 w-full divide-y overflow-y-auto rounded-md border border-neutral-300 text-sm shadow-md">
                     {filteredCustomers.map((c) => (
                       <li key={c.id}>
                         <button
@@ -272,8 +272,8 @@ export default function NewSaleForm({ customers, products }: Props) {
                             handleSelectCustomer(c);
                           }}
                           className={[
-                            "flex w-full items-center justify-between px-3 py-2 text-left hover:bg-neutral-800",
-                            c.id === customerId ? "bg-neutral-800" : "",
+                            "flex w-full items-center justify-between px-3 py-2 text-left",
+                            c.id === customerId ? "bg-pattern-100" : "",
                           ]
                             .join(" ")
                             .trim()}
@@ -321,7 +321,7 @@ export default function NewSaleForm({ customers, products }: Props) {
       />
 
       {formError && (
-        <div className="rounded-md border border-red-800 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+        <div className="rounded-md border border-red-600 bg-red-200 px-3 py-2 text-sm font-bold text-red-600">
           {formError}
         </div>
       )}

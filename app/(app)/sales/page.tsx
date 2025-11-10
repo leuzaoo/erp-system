@@ -7,7 +7,10 @@ import { DataTable, type Column } from "@/app/components/Table";
 import type { SalesTableRow } from "@/types/SalesTableRow";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
-import badgeClass from "@/utils/badgeStatus";
+import {
+  ORDER_STATUS_BADGE_CLASS,
+  ORDER_STATUS_LABELS,
+} from "@/utils/orderStatus";
 
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
@@ -94,15 +97,16 @@ export default async function SalesPage({
       header: "Status",
       accessorKey: "status",
       cell: (value) => {
-        const v = String(value ?? "");
+        const status = String(value ?? "");
+
         return (
           <span
             className={
-              "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium " +
-              badgeClass(v.toUpperCase())
+              "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium " +
+              (ORDER_STATUS_BADGE_CLASS[status] ?? "border border-neutral-700")
             }
           >
-            {v.toUpperCase().replaceAll("_", " ")}
+            {ORDER_STATUS_LABELS[status] ?? status}
           </span>
         );
       },

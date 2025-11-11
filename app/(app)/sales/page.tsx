@@ -4,6 +4,7 @@ import moment from "moment";
 
 import type { SalesTableRow } from "@/types/SalesTableRow";
 
+import { canEditOrder, type AppRole } from "@/utils/permissions";
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 import {
@@ -28,6 +29,25 @@ export default async function SalesPage({
   const rawQ = qParam.trim();
 
   const supabase = await supabaseRSC();
+
+  const {
+    data: { user },
+    error: userErr,
+  } = await supabase.auth.getUser();
+
+  if (userErr || !user) {
+    return (
+      <pre className="text-red-400">Não autenticado. Faça login novamente.</pre>
+    );
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const role = (profile?.role ?? "vendedor") as AppRole;
 
   const { data: orders, error } = await supabase
     .from("orders")
@@ -96,6 +116,7 @@ export default async function SalesPage({
     {
       header: "Status",
       accessorKey: "status",
+      width: 140,
       cell: (value) => {
         const status = String(value ?? "");
 
@@ -110,25 +131,51 @@ export default async function SalesPage({
           </span>
         );
       },
-      width: 140,
     },
     {
       header: "Valor",
       accessorKey: "total_price",
       align: "right",
+      width: 140,
       cell: (value) => (
         <span className="font-semibold">
           {brazilianCurrency(value as number | string)}
         </span>
       ),
-      width: 140,
     },
     {
       header: "Criado",
       accessorKey: "created_at",
       align: "right",
-      cell: (value) => moment(String(value)).format("DD/MM/YYYY - HH:mm"),
       width: 170,
+      cell: (value) => moment(String(value)).format("DD/MM/YYYY - HH:mm"),
+    },
+  ];
+
+  const columnsWithEdit: Column<SalesTableRow>[] = [
+    ...columns,
+    {
+      header: "",
+      align: "right",
+      width: 80,
+      cell: (_, row) => {
+        const allowed = canEditOrder({
+          role,
+          userId: user.id,
+          sellerId: row.seller_id ?? null,
+        });
+
+        if (!allowed) return null;
+
+        return (
+          <Link
+            href={`/orders/${row.id}/edit`}
+            className="rounded-md border border-neutral-400 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-200"
+          >
+            Editar
+          </Link>
+        );
+      },
     },
   ];
 
@@ -161,14 +208,14 @@ export default async function SalesPage({
       </form>
 
       <DataTable<SalesTableRow>
-        columns={columns}
+        columns={columnsWithEdit}
         data={filtered}
         rowKey={(r) => r.id}
         caption={
           rawQ ? (
-            <p>
+            <>
               Resultados para: “<span className="font-bold">{rawQ}</span>”.
-            </p>
+            </>
           ) : undefined
         }
         emptyMessage="Nenhuma venda encontrada."

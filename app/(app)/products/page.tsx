@@ -190,7 +190,13 @@ export default async function ProductsPage({
         emptyMessage="Nenhum produto encontrado."
         zebra
         stickyHeader
-        caption={rawQ ? `Resultados para: “${rawQ}”.` : undefined}
+        caption={
+          rawQ ? (
+            <>
+              Resultados para: “<span className="font-bold">{rawQ}</span>”.
+            </>
+          ) : undefined
+        }
       />
     </div>
   );

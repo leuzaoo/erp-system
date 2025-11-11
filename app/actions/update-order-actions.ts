@@ -35,7 +35,6 @@ export async function updateOrder(
     return { ok: false, message: "Sessão expirada. Faça login novamente." };
   }
 
-  // role do usuário
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
@@ -44,7 +43,6 @@ export async function updateOrder(
 
   const role = (profile?.role ?? "vendedor") as AppRole;
 
-  // carrega pedido p/ checar seller_id
   const { data: order, error: orderErr } = await supabase
     .from("orders")
     .select("id, seller_id")
@@ -69,11 +67,42 @@ export async function updateOrder(
     return { ok: false, message: "Informe ao menos um item." };
   }
 
-  for (const it of payload.items) {
-    if (!it.id) {
-      continue;
-    }
+  const { data: existingItems, error: existingItemsErr } = await supabase
+    .from("order_items")
+    .select("id")
+    .eq("order_id", payload.orderId);
 
+  if (existingItemsErr) {
+    return {
+      ok: false,
+      message: "Erro ao carregar itens atuais do pedido.",
+    };
+  }
+
+  const existingIds = new Set(
+    (existingItems || []).map((it: { id: string }) => it.id),
+  );
+
+  const payloadWithId = payload.items.filter((it) => !!it.id);
+  const payloadIds = new Set(payloadWithId.map((it) => String(it.id)));
+
+  const idsToDelete = [...existingIds].filter((id) => !payloadIds.has(id));
+
+  if (idsToDelete.length) {
+    const { error: deleteErr } = await supabase
+      .from("order_items")
+      .delete()
+      .in("id", idsToDelete);
+
+    if (deleteErr) {
+      return {
+        ok: false,
+        message: `Erro ao remover itens do pedido: ${deleteErr.message}`,
+      };
+    }
+  }
+
+  for (const it of payloadWithId) {
     const { error: itemErr } = await supabase
       .from("order_items")
       .update({
@@ -85,12 +114,39 @@ export async function updateOrder(
         asked_height_cm: it.asked_height_cm ?? null,
         line_total: it.quantity * it.unit_price,
       })
-      .eq("id", it.id);
+      .eq("id", it.id)
+      .eq("order_id", payload.orderId);
 
     if (itemErr) {
       return {
         ok: false,
         message: `Erro ao atualizar itens: ${itemErr.message}`,
+      };
+    }
+  }
+
+  const newItems = payload.items.filter((it) => !it.id);
+
+  if (newItems.length) {
+    const toInsert = newItems.map((it) => ({
+      order_id: payload.orderId,
+      product_id: it.product_id,
+      quantity: it.quantity,
+      unit_price: it.unit_price,
+      asked_length_cm: it.asked_length_cm ?? null,
+      asked_width_cm: it.asked_width_cm ?? null,
+      asked_height_cm: it.asked_height_cm ?? null,
+      line_total: it.quantity * it.unit_price,
+    }));
+
+    const { error: insertErr } = await supabase
+      .from("order_items")
+      .insert(toInsert);
+
+    if (insertErr) {
+      return {
+        ok: false,
+        message: `Erro ao adicionar novos itens: ${insertErr.message}`,
       };
     }
   }
@@ -112,6 +168,12 @@ export async function updateOrder(
     0,
   );
 
+  const updates: Partial<{ status: string; total_price: number }> = {
+    total_price: total,
+  };
+
+  updates.status = payload.status;
+
   const { error: updateOrderErr } = await supabase
     .from("orders")
     .update({
@@ -121,6 +183,11 @@ export async function updateOrder(
     .eq("id", payload.orderId);
 
   if (updateOrderErr) {
+    console.error(
+      "updateOrderErr FULL:",
+      JSON.stringify(updateOrderErr, null, 2),
+    );
+
     return {
       ok: false,
       message: `Erro ao atualizar pedido: ${updateOrderErr.message}`,

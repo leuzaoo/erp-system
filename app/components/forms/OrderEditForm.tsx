@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 
+import { updateOrder } from "@/app/actions/update-order-actions";
 import type { ItemErrors } from "@/types/ItemsErrors";
 
 import ItemsSection from "@/app/components/ItemsSection";
@@ -11,7 +12,6 @@ import Input from "@/app/components/Input";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import { validateDimension } from "@/utils/validateDimension";
-import { updateOrder } from "@/app/actions/update-order-actions";
 
 type Product = {
   id: string;
@@ -251,7 +251,7 @@ export default function OrderEditForm({ order, products }: OrderEditFormProps) {
   };
 
   return (
-    <div className="space-y-6 mb-10">
+    <div className="mb-10 space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
         <div className="md:col-span-1">
           <Input

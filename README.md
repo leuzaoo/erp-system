@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ERP (Planejamento de Recursos Empresariais)
 
-## Getting Started
+ 1. Visão Geral
+ 2. Tecnologias da Aplicação
+ 3. Estrutura do Projeto
+ <!-- 4. Banco de Dados e RLS
+ 5. Funções e Triggers do Supabase
+ 6. Regras de Permissão no Código
+ 7. Deploy e Ambientes
+ 8. Fluxos Principais
+ 9. Contribuição e Boas Práticas
+ 10. Roadmap / Melhorias Futuras -->
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### 1. Visão Geral
+
+O objetivo é centralizar todas as informações da empresa em um só lugar. Este projeto se iniciou após um cliente solicitar a produção de um sistema que torna-se automático, o que ainda era manual em sua loja. Nele é possível criar vendas, gerenciar pedidos e estoque de produtos, acompanhar status de produção e métricas de vendas em tempo real.
+
+---
+
+### 2. Tecnologias da Aplicação
+
+| Componente | Tecnologia | Função 
+| ----------- | ----------- | ----------- |
+| **Frontend** | Next.js + TypeScript | Interface moderna e performática |
+| **Backend** | Supabase (PostgreSQL + Auth + RLS) | Banco, autenticação e permissões |
+| **ORM** | Supabase Client (sem Prisma) | Comunicação direta via RLS |
+| **Estilização** | TailwindCSS + clsx | Praticidade e rapidez para estilizar |
+| **Hospedagem** | Vercel (frontend), Supabase (backend) | Infra de produção |
+
+---
+
+### 3. Estrutura do Projeto
+
 ```
+/app
+├ ├─ (auth)               → Ações de autenticação
+├ ├─ (app)                → Aplicação após autenticação
+├ ├ ├─ /customers           → Página de clientes
+├ ├ ├─ /dashboard           → Página principal do projeto
+├ ├ ├─ /products            → Página de produtos
+├ ├ ├─ /orders              → Página de pedidos
+├ ├ └─ /sales               → Página de vendas
+├ ├─ /actions             → Ações do servidor
+├ ├─ /components          → Componentes reutilizáveis
+├ └─ /login               → Página de login
+├─ /types                → Tipos TypeScript globais
+├─ /utils                → Funções auxiliares
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

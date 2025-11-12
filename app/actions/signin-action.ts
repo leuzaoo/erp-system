@@ -21,7 +21,11 @@ function translateError(message: string): string {
   return "Erro ao fazer login. Tente novamente.";
 }
 
-export async function signIn(email: string, password: string) {
+export async function signIn(
+  email: string,
+  password: string,
+  redirectTo?: string | null,
+) {
   const supabase = await supabaseAction();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
@@ -30,5 +34,5 @@ export async function signIn(email: string, password: string) {
     return { ok: false, message: translatedMessage };
   }
 
-  redirect("/dashboard");
+  redirect(redirectTo?.startsWith("/") ? redirectTo : "/dashboard");
 }

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import type { OrderRow } from "@/types/OrderRow";
@@ -13,6 +14,11 @@ import { DataTable } from "@/app/components/Table";
 
 export default async function DashboardPage() {
   const supabase = await supabaseRSC();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) redirect("/login");
 
   const { data: orders, error } = await supabase
     .from("orders")

@@ -1,5 +1,7 @@
 "use client";
 import { useState, FormEvent } from "react";
+import { Loader2Icon } from "lucide-react";
+
 import { signIn } from "@/app/actions/signin-action";
 
 import TextField from "@/app/components/Input";
@@ -9,10 +11,20 @@ import Card from "@/app/components/Card";
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    await signIn(email, password);
+    setErrorMessage(null);
+    setLoading(true);
+
+    const result = await signIn(email, password);
+    setLoading(false);
+
+    if (result && !result.ok) {
+      setErrorMessage(result.message ?? "Erro ao fazer login.");
+    }
   }
 
   return (
@@ -35,8 +47,15 @@ export default function LoginForm() {
           type="password"
           placeholder="••••••••"
         />
+
+        {errorMessage && (
+          <div className="my-2 flex items-center justify-center gap-2 rounded-md bg-red-50/60 py-2 text-sm text-red-600 ring-1 ring-red-100">
+            {errorMessage}
+          </div>
+        )}
+
         <Button disabled={!email || !password} className="w-full" type="submit">
-          Entrar
+          {loading ? <Loader2Icon className="animate-spin" /> : "Entrar"}
         </Button>
       </form>
     </Card>

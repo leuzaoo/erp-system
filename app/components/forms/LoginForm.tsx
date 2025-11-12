@@ -8,7 +8,11 @@ import TextField from "@/app/components/Input";
 import Button from "@/app/components/Button";
 import Card from "@/app/components/Card";
 
-export default function LoginForm() {
+export default function LoginForm({
+  redirectTo,
+}: {
+  redirectTo?: string | null;
+}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -19,7 +23,7 @@ export default function LoginForm() {
     setErrorMessage(null);
     setLoading(true);
 
-    const result = await signIn(email, password);
+    const result = await signIn(email, password, redirectTo);
     setLoading(false);
 
     if (result && !result.ok) {

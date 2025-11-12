@@ -1,11 +1,23 @@
+import { supabaseRSC } from "@/utils/supabase/rsc";
+import { redirect } from "next/navigation";
+
 import LoginForm from "../components/forms/LoginForm";
 
-const LoginPage = () => {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: { redirect?: string };
+}) {
+  const supabase = await supabaseRSC();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session) redirect("/dashboard");
+
   return (
     <div className="flex min-h-screen items-center">
-      <LoginForm />;
+      <LoginForm redirectTo={searchParams.redirect ?? null} />;
     </div>
   );
-};
-
-export default LoginPage;
+}

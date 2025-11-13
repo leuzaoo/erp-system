@@ -1,16 +1,17 @@
+export const dynamic = "force-dynamic";
+
 import { redirect } from "next/navigation";
+import { LogOutIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { supabaseRSC } from "@/utils/supabase/rsc";
-import { signOut } from "../actions/logout-action";
+import { signOut } from "../actions/auth-actions";
 
 import Sidebar from "../components/Sidebar";
-import { LogOutIcon } from "lucide-react";
-
-export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const supabase = await supabaseRSC();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();

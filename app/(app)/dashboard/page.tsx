@@ -11,6 +11,15 @@ import {
 } from "@/utils/orderStatus";
 
 import { DataTable } from "@/app/components/Table";
+import KpiCard from "@/app/components/KpiCard";
+
+function sumOrdersTotal(orders: { total_price: number }[] = []) {
+  return orders.reduce((acc, order) => acc + Number(order.total_price || 0), 0);
+}
+
+function countOrdersInProduction(orders: { status: string }[] = []) {
+  return orders.filter((order) => order.status === "FABRICACAO").length;
+}
 
 export default async function DashboardPage() {
   const supabase = await supabaseRSC();
@@ -28,13 +37,36 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
+  const { data: customers, error: customersError } = await supabase
+    .from("customers")
+    .select("id");
+
   if (error) {
     return <pre className="text-red-600">Erro: {error.message}</pre>;
   }
 
+  if (customersError) {
+    <pre className="text-red-600">
+      Erro ao renderizar clientes: {customersError.message}
+    </pre>;
+  }
+
+  const totalOrdersPrice = sumOrdersTotal(orders || []);
+  const ordersInProduction = countOrdersInProduction(orders || []);
+
   return (
-    <>
-      <h1 className="mb-4 text-2xl font-bold">Dashboard</h1>
+    <div className="space-y-4">
+      <h1 className="text-2xl font-bold">Dashboard</h1>
+
+      <div className="flex items-center gap-4">
+        <KpiCard title="Vendas no mês" value={orders?.length} />
+        <KpiCard title="Em fabricação" value={ordersInProduction} />
+        <KpiCard title="Clientes cadastrados" value={customers?.length} />
+        <KpiCard
+          title="Total das vendas"
+          value={brazilianCurrency(totalOrdersPrice)}
+        />
+      </div>
 
       {!orders?.length && (
         <p className="text-pattern-800">Nenhum pedido encontrado.</p>
@@ -92,6 +124,6 @@ export default async function DashboardPage() {
           ]}
         />
       )}
-    </>
+    </div>
   );
 }

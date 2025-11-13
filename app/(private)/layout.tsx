@@ -4,17 +4,16 @@ import { redirect } from "next/navigation";
 import { LogOutIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { requireAuth } from "@/utils/auth/requireAuth";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 import { signOut } from "../actions/auth-actions";
 
 import Sidebar from "../components/Sidebar";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  const supabase = await supabaseRSC();
+  const user = await requireAuth();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const supabase = await supabaseRSC();
 
   if (!user) {
     redirect("/login");

@@ -1,7 +1,8 @@
 "use server";
 
-import { supabaseAction } from "@/utils/supabase/action";
 import { redirect } from "next/navigation";
+
+import { supabaseAction } from "@/utils/supabase/action";
 
 function translateError(message: string): string {
   const lower = message.toLowerCase();
@@ -31,8 +32,14 @@ export async function signIn(
 
   if (error) {
     const translatedMessage = translateError(error.message);
-    return { ok: false, message: translatedMessage };
+    return { ok: false as const, message: translatedMessage };
   }
 
   redirect(redirectTo?.startsWith("/") ? redirectTo : "/dashboard");
+}
+
+export async function signOut() {
+  const supabase = await supabaseAction();
+  await supabase.auth.signOut();
+  redirect("/login");
 }

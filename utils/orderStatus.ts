@@ -22,13 +22,13 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 
 export const ORDER_STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
   ENVIADO: "border text-center border-blue-700 bg-blue-900/30 text-blue-600",
-  APROVADO: "border text-center border-sky-500 bg-sky-900/60 text-white",
+  APROVADO:
+    "border text-center border-emerald-700 bg-emerald-900/30 text-emerald-700",
   FABRICACAO:
     "border text-center border-yellow-700 bg-yellow-300/50 text-yellow-700",
   EM_INSPECAO:
     "border text-center border-purple-700 bg-purple-300/50 text-purple-700",
-  FINALIZADO:
-    "border text-center border-emerald-700 bg-emerald-900/30 text-emerald-700",
+  FINALIZADO: "border text-center border-green-700 bg-green-200 text-green-700",
   EM_ESPERA:
     "border text-center border-neutral-700 bg-neutral-900/40 text-black",
   CANCELADO: "border text-center border-red-800 bg-red-900/30 text-red-600",

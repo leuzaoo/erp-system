@@ -1,9 +1,9 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import type { OrderRow } from "@/types/OrderRow";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
+import { requireAuth } from "@/utils/auth/requireAuth";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 import {
   ORDER_STATUS_LABELS,
@@ -21,51 +21,103 @@ function countOrdersInProduction(orders: { status: string }[] = []) {
   return orders.filter((order) => order.status === "FABRICACAO").length;
 }
 
+function countOrdersReadyToProduce(orders: { status: string }[] = []) {
+  return orders.filter((order) => order.status === "APROVADO").length;
+}
+
 export default async function DashboardPage() {
+  const user = await requireAuth();
   const supabase = await supabaseRSC();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
 
-  if (!session) redirect("/login");
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, role")
+    .eq("id", user.id)
+    .single();
 
-  const { data: orders, error } = await supabase
+  if (profileError || !profile) {
+    return (
+      <pre className="text-red-600">
+        Erro ao carregar perfil: {profileError?.message}
+      </pre>
+    );
+  }
+
+  const userRole = profile.role as "admin" | "vendedor" | "fabrica";
+
+  let ordersQuery = supabase
     .from("orders")
     .select(
-      "id, number, customer_name_snapshot, seller_name_snapshot,created_at, status, total_price, customer_id, seller_id",
+      "id, number, customer_name_snapshot, seller_name_snapshot, created_at, status, total_price, customer_id, seller_id",
     )
     .order("created_at", { ascending: false })
     .limit(10);
 
-  const { data: customers, error: customersError } = await supabase
-    .from("customers")
-    .select("id");
+  if (userRole === "fabrica") {
+    ordersQuery = ordersQuery.eq("status", "APROVADO");
+  }
+
+  const { data: orders, error } = await ordersQuery;
 
   if (error) {
     return <pre className="text-red-600">Erro: {error.message}</pre>;
   }
 
-  if (customersError) {
-    <pre className="text-red-600">
-      Erro ao renderizar clientes: {customersError.message}
-    </pre>;
+  let customersCount = 0;
+
+  if (userRole === "admin") {
+    const { data: customers, error: customersError } = await supabase
+      .from("customers")
+      .select("id");
+
+    if (customersError) {
+      return (
+        <pre className="text-red-600">
+          Erro ao renderizar clientes: {customersError.message}
+        </pre>
+      );
+    }
+
+    customersCount = customers?.length ?? 0;
+  } else if (userRole === "vendedor") {
+    const { count, error: customersError } = await supabase
+      .from("orders")
+      .select("customer_id", { count: "exact", head: true })
+      .eq("seller_id", profile.id);
+
+    if (customersError) {
+      return (
+        <pre className="text-red-600">
+          Erro ao renderizar clientes: {customersError.message}
+        </pre>
+      );
+    }
+
+    customersCount = count ?? 0;
   }
 
   const totalOrdersPrice = sumOrdersTotal(orders || []);
   const ordersInProduction = countOrdersInProduction(orders || []);
+  const ordersReadyToProduce = countOrdersReadyToProduce(orders || []);
 
   return (
     <div>
       <h1 className="mb-4 text-2xl font-bold">Dashboard</h1>
 
       <div className="flex items-center gap-4 overflow-x-auto pb-4">
-        <KpiCard title="Vendas no mês" value={orders?.length} />
-        <KpiCard title="Em fabricação" value={ordersInProduction} />
-        <KpiCard title="Clientes cadastrados" value={customers?.length} />
-        <KpiCard
-          title="Total das vendas"
-          value={brazilianCurrency(totalOrdersPrice)}
-        />
+        {userRole === "fabrica" ? (
+          <KpiCard title="Pronto para fabricar" value={ordersReadyToProduce} />
+        ) : (
+          <>
+            <KpiCard title="Vendas no mês" value={orders?.length ?? 0} />
+            <KpiCard title="Em fabricação" value={ordersInProduction} />
+            <KpiCard title="Clientes cadastrados" value={customersCount} />
+            <KpiCard
+              title="Total das vendas"
+              value={brazilianCurrency(totalOrdersPrice)}
+            />
+          </>
+        )}
       </div>
 
       {!orders?.length && (

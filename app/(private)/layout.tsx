@@ -1,19 +1,19 @@
-import { redirect } from "next/navigation";
-import type { ReactNode } from "react";
-
-import { supabaseRSC } from "@/utils/supabase/rsc";
-import { signOut } from "../actions/logout-action";
-
-import Sidebar from "../components/Sidebar";
-import { LogOutIcon } from "lucide-react";
-
 export const dynamic = "force-dynamic";
 
+import { redirect } from "next/navigation";
+import { LogOutIcon } from "lucide-react";
+import type { ReactNode } from "react";
+
+import { requireAuth } from "@/utils/auth/requireAuth";
+import { supabaseRSC } from "@/utils/supabase/rsc";
+import { signOut } from "../actions/auth-actions";
+
+import Sidebar from "../components/Sidebar";
+
 export default async function AppLayout({ children }: { children: ReactNode }) {
+  const user = await requireAuth();
+
   const supabase = await supabaseRSC();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect("/login");

@@ -2,7 +2,7 @@
 import { useState, FormEvent } from "react";
 import { Loader2Icon } from "lucide-react";
 
-import { signIn } from "@/app/actions/signin-action";
+import { signIn } from "@/app/actions/auth-actions";
 
 import TextField from "@/app/components/Input";
 import Button from "@/app/components/Button";

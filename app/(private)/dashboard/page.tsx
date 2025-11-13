@@ -55,10 +55,10 @@ export default async function DashboardPage() {
   const ordersInProduction = countOrdersInProduction(orders || []);
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+    <div>
+      <h1 className="mb-4 text-2xl font-bold">Dashboard</h1>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 overflow-x-auto pb-4">
         <KpiCard title="Vendas no mês" value={orders?.length} />
         <KpiCard title="Em fabricação" value={ordersInProduction} />
         <KpiCard title="Clientes cadastrados" value={customers?.length} />

@@ -1,11 +1,15 @@
 import Link from "next/link";
 
+import { requireRole } from "@/utils/auth/requireRole";
+
 import { createProduct } from "@/app/actions/product-actions";
 
 import Input from "@/app/components/Input";
 import Button from "@/app/components/Button";
 
-export default function NewProductPage() {
+export default async function NewProductPage() {
+  await requireRole(["admin"]);
+
   return (
     <div className="max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold">Novo Produto</h1>

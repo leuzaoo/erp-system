@@ -1,10 +1,12 @@
 export const dynamic = "force-dynamic";
 
+import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 
 import NewSaleForm from "@/app/components/forms/NewSaleForm";
 
 export default async function NewSalePage() {
+  await requireRole(["admin", "vendedor"]);
   const supabase = await supabaseRSC();
 
   const [{ data: customers }, { data: products }] = await Promise.all([

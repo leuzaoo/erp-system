@@ -1,9 +1,9 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import type { OrderRow } from "@/types/OrderRow";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
+import { requireAuth } from "@/utils/auth/requireAuth";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 import {
   ORDER_STATUS_LABELS,
@@ -11,7 +11,7 @@ import {
 } from "@/utils/orderStatus";
 
 import { DataTable } from "@/app/components/Table";
-import KpiCard from "@/app/components/KpiCard";
+import Card from "@/app/components/Card";
 
 function sumOrdersTotal(orders: { total_price: number }[] = []) {
   return orders.reduce((acc, order) => acc + Number(order.total_price || 0), 0);
@@ -21,51 +21,119 @@ function countOrdersInProduction(orders: { status: string }[] = []) {
   return orders.filter((order) => order.status === "FABRICACAO").length;
 }
 
+function countOrdersReadyToProduce(orders: { status: string }[] = []) {
+  return orders.filter((order) => order.status === "APROVADO").length;
+}
+
 export default async function DashboardPage() {
+  const user = await requireAuth();
   const supabase = await supabaseRSC();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
 
-  if (!session) redirect("/login");
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, role")
+    .eq("id", user.id)
+    .single();
 
-  const { data: orders, error } = await supabase
+  if (profileError || !profile) {
+    return (
+      <pre className="text-red-600">
+        Erro ao carregar perfil: {profileError?.message}
+      </pre>
+    );
+  }
+
+  const userRole = profile.role as "admin" | "vendedor" | "fabrica";
+
+  let ordersQuery = supabase
     .from("orders")
     .select(
-      "id, number, customer_name_snapshot, seller_name_snapshot,created_at, status, total_price, customer_id, seller_id",
+      "id, number, customer_name_snapshot, seller_name_snapshot, created_at, status, total_price, customer_id, seller_id",
     )
     .order("created_at", { ascending: false })
     .limit(10);
 
-  const { data: customers, error: customersError } = await supabase
-    .from("customers")
-    .select("id");
+  if (userRole === "fabrica") {
+    ordersQuery = ordersQuery.eq("status", "APROVADO");
+  }
+
+  const { data: orders, error } = await ordersQuery;
 
   if (error) {
     return <pre className="text-red-600">Erro: {error.message}</pre>;
   }
 
-  if (customersError) {
-    <pre className="text-red-600">
-      Erro ao renderizar clientes: {customersError.message}
-    </pre>;
+  let customersCount = 0;
+
+  if (userRole === "admin") {
+    const { data: customers, error: customersError } = await supabase
+      .from("customers")
+      .select("id");
+
+    if (customersError) {
+      return (
+        <pre className="text-red-600">
+          Erro ao renderizar clientes: {customersError.message}
+        </pre>
+      );
+    }
+
+    customersCount = customers?.length ?? 0;
+  } else if (userRole === "vendedor") {
+    const { count, error: customersError } = await supabase
+      .from("orders")
+      .select("customer_id", { count: "exact", head: true })
+      .eq("seller_id", profile.id);
+
+    if (customersError) {
+      return (
+        <pre className="text-red-600">
+          Erro ao renderizar clientes: {customersError.message}
+        </pre>
+      );
+    }
+
+    customersCount = count ?? 0;
   }
 
   const totalOrdersPrice = sumOrdersTotal(orders || []);
   const ordersInProduction = countOrdersInProduction(orders || []);
+  const ordersReadyToProduce = countOrdersReadyToProduce(orders || []);
 
   return (
     <div>
       <h1 className="mb-4 text-2xl font-bold">Dashboard</h1>
 
       <div className="flex items-center gap-4 overflow-x-auto pb-4">
-        <KpiCard title="Vendas no mês" value={orders?.length} />
-        <KpiCard title="Em fabricação" value={ordersInProduction} />
-        <KpiCard title="Clientes cadastrados" value={customers?.length} />
-        <KpiCard
-          title="Total das vendas"
-          value={brazilianCurrency(totalOrdersPrice)}
-        />
+        {userRole === "fabrica" ? (
+          <>
+            <Card className="flex max-w-max min-w-max flex-col gap-1">
+              <span>Pronto para fabricar</span>
+              <span className="text-2xl font-bold">{ordersReadyToProduce}</span>
+            </Card>
+          </>
+        ) : (
+          <div className="flex items-center gap-4 overflow-x-auto">
+            <Card className="flex flex-col">
+              <span>Vendas</span>
+              <span className="text-2xl font-bold">{orders?.length ?? 0}</span>
+            </Card>
+            <Card className="flex flex-col">
+              <span>Em fabricação</span>
+              <span className="text-2xl font-bold">{ordersInProduction}</span>
+            </Card>
+            <Card className="flex flex-col">
+              <span>Clientes cadastrados</span>
+              <span className="text-2xl font-bold">{customersCount}</span>
+            </Card>
+            <Card className="flex flex-col">
+              <span>Total de vendas</span>
+              <span className="text-2xl font-bold">
+                {brazilianCurrency(totalOrdersPrice)}
+              </span>
+            </Card>
+          </div>
+        )}
       </div>
 
       {!orders?.length && (
@@ -90,11 +158,11 @@ export default async function DashboardPage() {
               ),
             },
             {
-              header: "Cliente (id)",
+              header: "Cliente",
               cell: (_, row) => <span>{row.customer_name_snapshot}</span>,
             },
             {
-              header: "Vendedor (id)",
+              header: "Vendedor",
               cell: (_, row) => <span>{row.seller_name_snapshot}</span>,
             },
             {

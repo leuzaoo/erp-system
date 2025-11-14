@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   BoxIcon,
   CalendarIcon,
@@ -5,19 +6,20 @@ import {
   SpeechIcon,
   UserIcon,
 } from "lucide-react";
-import { supabaseRSC } from "@/utils/supabase/rsc";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
-import type { OrderItemRow } from "@/types/OrderItemRow";
-import type { OrderView } from "@/types/OrderView";
-
-import Card from "@/app/components/Card";
-import Link from "next/link";
+import { requireAuth } from "@/utils/auth/requireAuth";
+import { supabaseRSC } from "@/utils/supabase/rsc";
 import {
   ORDER_STATUS_BADGE_CLASS,
   ORDER_STATUS_LABELS,
   type OrderStatus,
 } from "@/utils/orderStatus";
+
+import type { OrderItemRow } from "@/types/OrderItemRow";
+import type { OrderView } from "@/types/OrderView";
+
+import Card from "@/app/components/Card";
 
 export default async function OrderViewPage({
   params,
@@ -35,8 +37,25 @@ export default async function OrderViewPage({
   }
 
   const supabase = await supabaseRSC();
+  const user = await requireAuth();
 
-  const { data: order, error } = await supabase
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, role")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    return (
+      <pre className="text-red-600">
+        Erro ao carregar perfil: {profileError?.message}
+      </pre>
+    );
+  }
+
+  const userRole = profile.role as "admin" | "vendedor" | "fabrica";
+
+  let ordersQuery = supabase
     .from("orders")
     .select(
       `
@@ -60,34 +79,52 @@ export default async function OrderViewPage({
         )
       `,
     )
-    .eq("id", id)
-    .maybeSingle<OrderView>();
+    .eq("id", id);
+
+  if (userRole === "fabrica") {
+    ordersQuery = ordersQuery.eq("status", "APROVADO");
+  }
+
+  const { data: order, error: orderError } =
+    await ordersQuery.maybeSingle<OrderView>();
+
+  if (orderError) {
+    return <pre className="text-red-600">Erro: {orderError.message}</pre>;
+  }
 
   if (!order) {
     return (
       <div className="mt-10 flex flex-col items-center justify-center text-center">
-        <h1 className="text-4xl font-semibold text-white">
-          Pedido não encontrado
-        </h1>
+        <h1 className="text-4xl font-semibold">Pedido não encontrado</h1>
         <p className="text-neutral-400">
-          Este pedido não existe mais ou nunca existiu. Verifique o código
-          informado ou volte para a lista de pedidos.
+          Este pedido não existe. Verifique o código do pedido ou fale com o
+          administrador.
         </p>
 
-        <Link
-          href="/sales"
-          className="mt-5 flex items-center gap-2 rounded px-4 py-2 text-blue-500 hover:underline"
-        >
-          <MoveLeftIcon size={16} />
-          Página de pedidos
-        </Link>
+        {userRole === "fabrica" ? (
+          <Link
+            href="/orders"
+            className="mt-5 flex items-center gap-2 rounded px-4 py-2 text-blue-500 hover:underline"
+          >
+            <MoveLeftIcon size={16} />
+            Página de pedidos
+          </Link>
+        ) : (
+          <Link
+            href="/sales"
+            className="mt-5 flex items-center gap-2 rounded px-4 py-2 text-blue-500 hover:underline"
+          >
+            <MoveLeftIcon size={16} />
+            Página de pedidos
+          </Link>
+        )}
       </div>
     );
   }
 
-  if (error) {
+  if (orderError) {
     return (
-      <p className="mt-10 text-center text-sm text-red-400">
+      <p className="mt-10 text-center text-xl font-semibold text-red-600">
         Erro ao carregar os dados do pedido.
       </p>
     );
@@ -184,25 +221,36 @@ export default async function OrderViewPage({
             <h3 className="text-xl font-bold">Itens do pedido</h3>
           </div>
 
-          <ul className="mt-4 divide-y divide-neutral-800">
+          <ul className="divide-pattern-200 divide-y">
             {order.items?.map((it: OrderItemRow) => (
               <li key={it.id} className="flex items-end justify-between py-4">
-                <div>
-                  <div className="font-bold">
+                <div className="space-y-1">
+                  <div className="text-lg font-bold">
                     {it.product?.name ?? "Produto"}
                   </div>
-                  <div className="text-sm text-neutral-400">
-                    Quantidade: {it.quantity} ×{" "}
-                    {brazilianCurrency(it.unit_price)}
+                  <div>
+                    Dimensões:{" "}
+                    <span className="font-bold">
+                      {it.asked_length_cm ?? "—"}x{it.asked_width_cm ?? "—"}x
+                      {it.asked_height_cm ?? "—"} cm
+                    </span>
                   </div>
-                  <div className="text-xs text-neutral-500">
-                    Dimensões pedidas: {it.asked_length_cm ?? "—"} ×{" "}
-                    {it.asked_width_cm ?? "—"} × {it.asked_height_cm ?? "—"} cm
+                  <div className="opacity-50">
+                    Quantidade: {it.quantity}
+                    {userRole === "fabrica" ? (
+                      ""
+                    ) : (
+                      <span>{brazilianCurrency(it.unit_price)}</span>
+                    )}
                   </div>
                 </div>
-                <div className="text-right font-semibold">
-                  {brazilianCurrency(it.line_total)}
-                </div>
+                {userRole === "fabrica" ? (
+                  ""
+                ) : (
+                  <div className="text-right font-semibold">
+                    {brazilianCurrency(it.line_total)}
+                  </div>
+                )}
               </li>
             ))}
           </ul>

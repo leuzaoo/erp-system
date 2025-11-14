@@ -1,17 +1,14 @@
-import type { User } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
-
 import { supabaseRSC } from "@/utils/supabase/rsc";
 
-export async function requireAuth(): Promise<User> {
+export async function requireAuth() {
   const supabase = await supabaseRSC();
 
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser();
 
-  if (error || !user) {
+  if (!user) {
     redirect("/login");
   }
 

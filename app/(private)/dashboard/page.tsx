@@ -11,7 +11,7 @@ import {
 } from "@/utils/orderStatus";
 
 import { DataTable } from "@/app/components/Table";
-import KpiCard from "@/app/components/KpiCard";
+import Card from "@/app/components/Card";
 
 function sumOrdersTotal(orders: { total_price: number }[] = []) {
   return orders.reduce((acc, order) => acc + Number(order.total_price || 0), 0);
@@ -106,17 +106,33 @@ export default async function DashboardPage() {
 
       <div className="flex items-center gap-4 overflow-x-auto pb-4">
         {userRole === "fabrica" ? (
-          <KpiCard title="Pronto para fabricar" value={ordersReadyToProduce} />
-        ) : (
           <>
-            <KpiCard title="Vendas no mês" value={orders?.length ?? 0} />
-            <KpiCard title="Em fabricação" value={ordersInProduction} />
-            <KpiCard title="Clientes cadastrados" value={customersCount} />
-            <KpiCard
-              title="Total das vendas"
-              value={brazilianCurrency(totalOrdersPrice)}
-            />
+            <Card className="flex min-w-max flex-col gap-1">
+              <span>Pronto para fabricar</span>
+              <span className="text-2xl font-bold">{ordersReadyToProduce}</span>
+            </Card>
           </>
+        ) : (
+          <div className="flex items-center gap-4 overflow-x-auto">
+            <Card className="flex flex-col">
+              <span>Vendas</span>
+              <span className="text-2xl font-bold">{orders?.length ?? 0}</span>
+            </Card>
+            <Card className="flex flex-col">
+              <span>Em fabricação</span>
+              <span className="text-2xl font-bold">{ordersInProduction}</span>
+            </Card>
+            <Card className="flex flex-col">
+              <span>Clientes cadastrados</span>
+              <span className="text-2xl font-bold">{customersCount}</span>
+            </Card>
+            <Card className="flex flex-col">
+              <span>Total de vendas</span>
+              <span className="text-2xl font-bold">
+                {brazilianCurrency(totalOrdersPrice)}
+              </span>
+            </Card>
+          </div>
         )}
       </div>
 
@@ -142,11 +158,11 @@ export default async function DashboardPage() {
               ),
             },
             {
-              header: "Cliente (id)",
+              header: "Cliente",
               cell: (_, row) => <span>{row.customer_name_snapshot}</span>,
             },
             {
-              header: "Vendedor (id)",
+              header: "Vendedor",
               cell: (_, row) => <span>{row.seller_name_snapshot}</span>,
             },
             {

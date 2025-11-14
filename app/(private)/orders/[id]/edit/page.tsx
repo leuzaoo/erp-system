@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 
+import { requireRole } from "@/utils/auth/requireRole";
 import type { OrderEdit } from "@/types/OrderEdit";
 
-import { canEditOrder, type AppRole } from "@/utils/permissions";
+import { canEditOrder } from "@/utils/permissions";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 
 import OrderEditForm from "@/app/components/forms/OrderEditForm";
@@ -17,13 +18,9 @@ export default async function EditOrderPage({
   if (!id) notFound();
 
   const supabase = await supabaseRSC();
+  const { user, role } = await requireRole(["admin", "vendedor"]);
 
-  const {
-    data: { user },
-    error: userErr,
-  } = await supabase.auth.getUser();
-
-  if (userErr || !user) {
+  if (!user) {
     notFound();
   }
 
@@ -36,8 +33,6 @@ export default async function EditOrderPage({
   if (profileErr || !profile) {
     notFound();
   }
-
-  const role = (profile.role ?? "vendedor") as AppRole;
 
   const { data: order, error: orderErr } = await supabase
     .from("orders")

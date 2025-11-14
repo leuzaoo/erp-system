@@ -8,13 +8,14 @@ import {
 } from "lucide-react";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
-import { requireAuth } from "@/utils/auth/requireAuth";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 import {
   ORDER_STATUS_BADGE_CLASS,
   ORDER_STATUS_LABELS,
   type OrderStatus,
 } from "@/utils/orderStatus";
+
+import { requireRole } from "@/utils/auth/requireRole";
 
 import type { OrderItemRow } from "@/types/OrderItemRow";
 import type { OrderView } from "@/types/OrderView";
@@ -37,7 +38,7 @@ export default async function OrderViewPage({
   }
 
   const supabase = await supabaseRSC();
-  const user = await requireAuth();
+  const { user } = await requireRole(["admin", "vendedor"]);
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
@@ -96,9 +97,10 @@ export default async function OrderViewPage({
     return (
       <div className="mt-10 flex flex-col items-center justify-center text-center">
         <h1 className="text-4xl font-semibold">Pedido não encontrado</h1>
-        <p className="text-neutral-400">
-          Este pedido não existe. Verifique o código do pedido ou fale com o
-          administrador.
+        <p className="opacity-50">
+          Este pedido não existe ou você não tem autorização para acessá-lo.{" "}
+          <br />
+          Verifique o código do pedido ou fale com o administrador.
         </p>
 
         {userRole === "fabrica" ? (

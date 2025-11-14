@@ -4,7 +4,9 @@ import { PlusIcon, SearchIcon } from "lucide-react";
 import Link from "next/link";
 
 import { ProductHandleActions } from "@/app/actions/product-handle-actions";
+
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
+import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 
 import { DataTable, type Column } from "@/app/components/Table";
@@ -34,6 +36,8 @@ export default async function ProductsPage({
 }) {
   const { q: qParam = "" } = await searchParams;
   const rawQ = qParam.trim();
+
+  await requireRole(["admin"]);
 
   const supabase = await supabaseRSC();
 

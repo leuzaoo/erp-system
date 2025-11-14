@@ -1,8 +1,11 @@
+import Link from "next/link";
+
 import { supabaseRSC } from "@/utils/supabase/rsc";
+
+import { requireRole } from "@/types/RequireRoleResult";
 
 import Input from "@/app/components/Input";
 import Button from "@/app/components/Button";
-import Link from "next/link";
 
 function Field({
   label,
@@ -31,6 +34,8 @@ export default async function ProductEditPage({
   }
 
   const supabase = await supabaseRSC();
+  await requireRole(["admin"]);
+
   const { data: product, error } = await supabase
     .from("products")
     .select(

@@ -1,8 +1,12 @@
-import Button from "@/app/components/Button";
-import KpiCard from "@/app/components/KpiCard";
-import { supabaseRSC } from "@/utils/supabase/rsc";
 import { ChevronLeftIcon, PencilIcon } from "lucide-react";
 import Link from "next/link";
+
+import { supabaseRSC } from "@/utils/supabase/rsc";
+
+import { requireRole } from "@/types/RequireRoleResult";
+
+import KpiCard from "@/app/components/KpiCard";
+import Button from "@/app/components/Button";
 
 export default async function ProductViewPage({
   params,
@@ -15,6 +19,8 @@ export default async function ProductViewPage({
   }
 
   const supabase = await supabaseRSC();
+  await requireRole(["admin"]);
+
   const { data: product, error } = await supabase
     .from("products")
     .select(

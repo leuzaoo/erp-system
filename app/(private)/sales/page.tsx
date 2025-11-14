@@ -4,8 +4,9 @@ import moment from "moment";
 
 import type { SalesTableRow } from "@/types/SalesTableRow";
 
-import { canEditOrder, type AppRole } from "@/utils/permissions";
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
+import { requireRole } from "@/utils/auth/requireRole";
+import { canEditOrder } from "@/utils/permissions";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 import {
   ORDER_STATUS_BADGE_CLASS,
@@ -28,26 +29,8 @@ export default async function SalesPage({
   const { q: qParam = "" } = await searchParams;
   const rawQ = qParam.trim();
 
+  const { user, role } = await requireRole(["admin", "vendedor"]);
   const supabase = await supabaseRSC();
-
-  const {
-    data: { user },
-    error: userErr,
-  } = await supabase.auth.getUser();
-
-  if (userErr || !user) {
-    return (
-      <pre className="text-red-400">Não autenticado. Faça login novamente.</pre>
-    );
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  const role = (profile?.role ?? "vendedor") as AppRole;
 
   const { data: orders, error } = await supabase
     .from("orders")

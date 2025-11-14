@@ -79,14 +79,14 @@ export default async function OrderViewPage({
         )
       `,
     )
-    .eq("id", id)
-    .maybeSingle<OrderView>();
+    .eq("id", id);
 
   if (userRole === "fabrica") {
     ordersQuery = ordersQuery.eq("status", "APROVADO");
   }
 
-  const { data: order, error: orderError } = await ordersQuery;
+  const { data: order, error: orderError } =
+    await ordersQuery.maybeSingle<OrderView>();
 
   if (orderError) {
     return <pre className="text-red-600">Erro: {orderError.message}</pre>;

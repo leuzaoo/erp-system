@@ -107,7 +107,7 @@ export default async function DashboardPage() {
       <div className="flex items-center gap-4 overflow-x-auto pb-4">
         {userRole === "fabrica" ? (
           <>
-            <Card className="flex min-w-max flex-col gap-1">
+            <Card className="flex max-w-max min-w-max flex-col gap-1">
               <span>Pronto para fabricar</span>
               <span className="text-2xl font-bold">{ordersReadyToProduce}</span>
             </Card>

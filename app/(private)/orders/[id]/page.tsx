@@ -38,7 +38,7 @@ export default async function OrderViewPage({
   }
 
   const supabase = await supabaseRSC();
-  const { user } = await requireRole(["admin", "vendedor"]);
+  const { user } = await requireRole(["admin", "vendedor", "fabrica"]);
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")

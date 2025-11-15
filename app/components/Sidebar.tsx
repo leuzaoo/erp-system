@@ -17,7 +17,7 @@ const NAV: Item[] = [
   { href: "/sales", label: "Vendas", roles: ["admin", "vendedor"] },
   { href: "/orders", label: "Pedidos", roles: ["admin", "fabrica"] },
   { href: "/products", label: "Produtos", roles: ["admin"] },
-  { href: "/customers", label: "Clientes", roles: ["admin", "vendedor"] },
+  { href: "/customers", label: "Clientes", roles: ["admin"] },
   { href: "/users", label: "Usuários", roles: ["admin"] },
 ];
 

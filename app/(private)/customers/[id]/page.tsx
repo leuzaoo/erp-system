@@ -1,8 +1,12 @@
+import { PencilIcon } from "lucide-react";
+import Link from "next/link";
+
 import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 
 import { CustomersTableRow } from "@/types/CustomersTableRow";
 
+import Button from "@/app/components/Button";
 import Card from "@/app/components/Card";
 
 export default async function CustomerViewPage({
@@ -138,6 +142,14 @@ export default async function CustomerViewPage({
           </div>
         </Card>
       </section>
+      <Link
+        href={`/customers/${customer.id}/edit`}
+        className="flex items-center justify-end gap-2 text-sm"
+      >
+        <Button>
+          <PencilIcon size={16} /> Editar
+        </Button>
+      </Link>
     </div>
   );
 }

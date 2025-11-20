@@ -1,16 +1,15 @@
 export type CustomersTableRow = {
   id: string;
   name: string;
-  document: string | null;
+  document?: string;
   phone: string;
-  created_by: string;
+  state: string;
+  city: string;
   district: string;
   street: string;
   number: string;
-  complement: string | null;
   postal_code: string;
-  city: string;
-  state: string;
+  complement?: string | null;
   created_at: string;
   creator?: {
     id: string;

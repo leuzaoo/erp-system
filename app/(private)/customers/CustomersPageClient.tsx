@@ -40,11 +40,15 @@ export default function CustomersPageClient({
 
   const filteredCustomers = React.useMemo(() => {
     const term = query.trim();
-    if (!term) return customers;
+    const sorted = [...customers].sort((a, b) =>
+      a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }),
+    );
+
+    if (!term) return sorted;
 
     const q = normalize(term);
 
-    return customers.filter((c) => {
+    return sorted.filter((c) => {
       const customerName = normalize(c.name);
       const customerDocument = normalize(c.document);
 

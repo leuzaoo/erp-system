@@ -1,7 +1,10 @@
 "use server";
-
-import { supabaseServer } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+
+import { requireRole } from "@/utils/auth/requireRole";
+
+import { supabaseAction } from "@/utils/supabase/action";
+import { supabaseServer } from "@/utils/supabase/server";
 
 export type NewCustomerInput = {
   name: string;
@@ -77,4 +80,37 @@ export async function createCustomerAction(payload: NewCustomerInput): Promise<{
   revalidatePath("/sales/new-sale");
 
   return { ok: true, customer: { id: data.id, name: data.name } };
+}
+
+type UpdateCustomerInput = {
+  name: string;
+  document?: string;
+  phone: string;
+  state: string;
+  city: string;
+  district: string;
+  street: string;
+  number: string;
+  complement?: string;
+  postal_code: string;
+};
+
+export async function updateCustomerAction(
+  id: string,
+  payload: UpdateCustomerInput,
+) {
+  await requireRole(["admin"]);
+
+  const supabase = await supabaseAction();
+
+  const { error } = await supabase
+    .from("customers")
+    .update(payload)
+    .eq("id", id);
+
+  if (error) {
+    return { ok: false as const, message: error.message };
+  }
+
+  return { ok: true as const };
 }

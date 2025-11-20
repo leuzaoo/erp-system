@@ -102,12 +102,20 @@ export default function CustomersPageClient({
       align: "right",
       width: 160,
       cell: (_, row) => (
-        <Link
-          href={`/orders/${row.id}/edit`}
-          className="rounded-md border border-neutral-400 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-200"
-        >
-          Editar
-        </Link>
+        <div className="flex gap-1">
+          <Link
+            href={`/customers/${row.id}`}
+            className="rounded-md border border-neutral-400 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-200"
+          >
+            Ver
+          </Link>
+          <Link
+            href={`/customers/${row.id}/edit`}
+            className="rounded-md border border-neutral-400 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-200"
+          >
+            Editar
+          </Link>
+        </div>
       ),
     },
   ];

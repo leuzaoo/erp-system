@@ -104,7 +104,7 @@ export default async function CustomerViewPage({
               <span className="font-semibold">
                 {customer.street && customer.number
                   ? `${customer.street}, ${customer.number}`
-                  : "Endereço não informado"}
+                  : "—"}
               </span>
             </p>
 
@@ -118,23 +118,21 @@ export default async function CustomerViewPage({
               <span className="font-semibold">
                 {customer.city && customer.state
                   ? `${customer.city} - ${customer.state}`
-                  : "Cidade/Estado não informados"}
+                  : "—"}
               </span>
             </p>
 
             <p>
               CEP: <br />
               <span className="font-semibold">
-                {customer.postal_code
-                  ? `${customer.postal_code}`
-                  : "CEP não informado"}
+                {customer.postal_code ? `${customer.postal_code}` : "—"}
               </span>
             </p>
 
             <p>
               Complemento: <br />
               <span className="font-semibold">
-                {customer.complement ? `${customer.complement}` : ""}
+                {customer.complement ? `${customer.complement}` : "—"}
               </span>
             </p>
           </div>

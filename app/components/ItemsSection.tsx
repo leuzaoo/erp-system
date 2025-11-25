@@ -50,13 +50,15 @@ export default function ItemsSection({
       <div className="border-pattern-200 flex items-center justify-between border-b p-3">
         <div className="font-semibold">Itens do pedido</div>
 
-        <Button
-          onClick={onAddItem}
-          type="button"
-          className="bg-darker hover:bg-pattern-700 font-bold! shadow-sm"
-        >
-          <PlusIcon size={16} /> Adicionar item
-        </Button>
+        {!hidePrices && (
+          <Button
+            onClick={onAddItem}
+            type="button"
+            className="bg-darker hover:bg-pattern-700 font-bold! shadow-sm"
+          >
+            <PlusIcon size={16} /> Adicionar item
+          </Button>
+        )}
       </div>
 
       {!items.length && (

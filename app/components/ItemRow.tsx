@@ -170,15 +170,17 @@ export default function ItemRow({
         </div>
       )}
 
-      <div className="mt-3 flex justify-end">
-        <Button
-          type="button"
-          onClick={onRemove}
-          className="bg-transparent! p-0! text-sm text-red-500! hover:underline"
-        >
-          Remover item
-        </Button>
-      </div>
+      {!hidePrices && (
+        <div className="mt-3 flex justify-end">
+          <Button
+            type="button"
+            onClick={onRemove}
+            className="bg-transparent! p-0! text-sm text-red-500! hover:underline"
+          >
+            Remover item
+          </Button>
+        </div>
+      )}
     </li>
   );
 }

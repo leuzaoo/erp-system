@@ -24,6 +24,7 @@ type Props = {
   onChangeLength: (idx: number, next: number | "") => void;
   onChangeWidth: (idx: number, next: number | "") => void;
   onChangeHeight: (idx: number, next: number | "") => void;
+  hidePrices?: boolean;
 };
 
 export default function ItemsSection({
@@ -39,6 +40,7 @@ export default function ItemsSection({
   onChangeLength,
   onChangeWidth,
   onChangeHeight,
+  hidePrices = false,
 }: Props) {
   const productOf = (product_id: string) =>
     products.find((p) => p.id === product_id);
@@ -47,6 +49,7 @@ export default function ItemsSection({
     <div className="rounded-xl bg-white shadow-md">
       <div className="border-pattern-200 flex items-center justify-between border-b p-3">
         <div className="font-semibold">Itens do pedido</div>
+
         <Button
           onClick={onAddItem}
           type="button"
@@ -78,14 +81,17 @@ export default function ItemsSection({
             onChangeWidth={onChangeWidth}
             onChangeHeight={onChangeHeight}
             onRemove={() => onRemoveItem(idx)}
+            hidePrices={hidePrices}
           />
         ))}
       </ul>
 
-      <div className="border-pattern-200 flex items-center justify-between border-t p-4">
-        <div className="text-pattern-400 text-sm">Total</div>
-        <div className="text-lg font-bold">{brazilianCurrency(total)}</div>
-      </div>
+      {!hidePrices && (
+        <div className="border-pattern-200 flex items-center justify-between border-t p-4">
+          <div className="text-pattern-400 text-sm">Total</div>
+          <div className="text-lg font-bold">{brazilianCurrency(total)}</div>
+        </div>
+      )}
     </div>
   );
 }

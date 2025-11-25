@@ -3,6 +3,7 @@ import {
   BoxIcon,
   CalendarIcon,
   MoveLeftIcon,
+  PencilIcon,
   SpeechIcon,
   UserIcon,
 } from "lucide-react";
@@ -20,6 +21,7 @@ import { requireRole } from "@/utils/auth/requireRole";
 import type { OrderItemRow } from "@/types/OrderItemRow";
 import type { OrderView } from "@/types/OrderView";
 
+import Button from "@/app/components/Button";
 import Card from "@/app/components/Card";
 
 export default async function OrderViewPage({
@@ -38,7 +40,7 @@ export default async function OrderViewPage({
   }
 
   const supabase = await supabaseRSC();
-  const { user } = await requireRole(["admin", "vendedor", "fabrica"]);
+  const { role, user } = await requireRole(["admin", "vendedor", "fabrica"]);
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
@@ -53,8 +55,6 @@ export default async function OrderViewPage({
       </pre>
     );
   }
-
-  const userRole = profile.role as "admin" | "vendedor" | "fabrica";
 
   let ordersQuery = supabase
     .from("orders")
@@ -82,8 +82,8 @@ export default async function OrderViewPage({
     )
     .eq("id", id);
 
-  if (userRole === "fabrica") {
-    ordersQuery = ordersQuery.eq("status", "APROVADO");
+  if (role === "fabrica") {
+    ordersQuery = ordersQuery.neq("status", "ENVIADO");
   }
 
   const { data: order, error: orderError } =
@@ -103,7 +103,7 @@ export default async function OrderViewPage({
           Verifique o código do pedido ou fale com o administrador.
         </p>
 
-        {userRole === "fabrica" ? (
+        {role === "fabrica" ? (
           <Link
             href="/orders"
             className="mt-5 flex items-center gap-2 rounded px-4 py-2 text-blue-500 hover:underline"
@@ -155,16 +155,28 @@ export default async function OrderViewPage({
           <h1 className="text-2xl">
             Pedido: <span className="font-bold">#{orderNumber}</span>
           </h1>
+
           <p className="mt-1 text-sm font-light opacity-70">
             Detalhes do pedido
           </p>
         </div>
 
-        <p
-          className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${ORDER_STATUS_BADGE_CLASS[status]}`}
-        >
-          {ORDER_STATUS_LABELS[status] ?? status}
-        </p>
+        <div className="flex flex-col items-end gap-2">
+          <p
+            className={`max-w-max rounded-full px-3 py-1 text-right text-sm font-semibold ${ORDER_STATUS_BADGE_CLASS[status]}`}
+          >
+            {ORDER_STATUS_LABELS[status] ?? status}
+          </p>
+          <Link
+            className="flex items-center gap-2"
+            href={`/orders/${order.id}/edit`}
+          >
+            <Button>
+              <PencilIcon size={16} />
+              {role === "fabrica" ? "Atualizar status" : "Editar"}
+            </Button>
+          </Link>
+        </div>
       </section>
 
       <section>
@@ -222,7 +234,6 @@ export default async function OrderViewPage({
             <BoxIcon />
             <h3 className="text-xl font-bold">Itens do pedido</h3>
           </div>
-
           <ul className="divide-pattern-200 divide-y">
             {order.items?.map((it: OrderItemRow) => (
               <li key={it.id} className="flex items-end justify-between py-4">
@@ -237,16 +248,9 @@ export default async function OrderViewPage({
                       {it.asked_height_cm ?? "—"} cm
                     </span>
                   </div>
-                  <div className="opacity-50">
-                    Quantidade: {it.quantity}
-                    {userRole === "fabrica" ? (
-                      ""
-                    ) : (
-                      <span>{brazilianCurrency(it.unit_price)}</span>
-                    )}
-                  </div>
+                  <div className="opacity-50">Quantidade: {it.quantity}</div>
                 </div>
-                {userRole === "fabrica" ? (
+                {role === "fabrica" ? (
                   ""
                 ) : (
                   <div className="text-right font-semibold">
@@ -257,6 +261,16 @@ export default async function OrderViewPage({
             ))}
           </ul>
         </Card>
+        {role === "fabrica" ? (
+          ""
+        ) : (
+          <div className="mt-4 flex items-center justify-end gap-1 text-lg">
+            Total do pedido:
+            <span className="font-bold">
+              R$ {brazilianCurrency(order.total_price)}
+            </span>
+          </div>
+        )}
       </section>
     </>
   );

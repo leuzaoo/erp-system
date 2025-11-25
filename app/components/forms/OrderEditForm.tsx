@@ -43,9 +43,18 @@ type OrderEditFormProps = {
     items: ItemDraft[];
   };
   products: Product[];
+  mode?: "full" | "status-only";
+  hidePrices?: boolean;
 };
 
-export default function OrderEditForm({ order, products }: OrderEditFormProps) {
+export default function OrderEditForm({
+  order,
+  products,
+  mode = "full",
+  hidePrices = false,
+}: OrderEditFormProps) {
+  const isStatusOnly = mode === "status-only";
+
   const router = useRouter();
 
   const [status, setStatus] = React.useState(order.status);
@@ -287,20 +296,23 @@ export default function OrderEditForm({ order, products }: OrderEditFormProps) {
         </div>
       </div>
 
-      <ItemsSection
-        items={items}
-        products={products}
-        errors={errors}
-        total={total}
-        onAddItem={onAddItem}
-        onRemoveItem={onRemoveItem}
-        onChangeProduct={onChangeProduct}
-        onChangeUnitPrice={onChangeUnitPrice}
-        onChangeQuantity={onChangeQuantity}
-        onChangeLength={onChangeLength}
-        onChangeWidth={onChangeWidth}
-        onChangeHeight={onChangeHeight}
-      />
+      <fieldset disabled={isStatusOnly}>
+        <ItemsSection
+          items={items}
+          products={products}
+          errors={errors}
+          total={total}
+          onAddItem={onAddItem}
+          onRemoveItem={onRemoveItem}
+          onChangeProduct={onChangeProduct}
+          onChangeUnitPrice={onChangeUnitPrice}
+          onChangeQuantity={onChangeQuantity}
+          onChangeLength={onChangeLength}
+          onChangeWidth={onChangeWidth}
+          onChangeHeight={onChangeHeight}
+          hidePrices={hidePrices}
+        />
+      </fieldset>
 
       {formError && (
         <div className="rounded-md border border-red-600 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
@@ -309,12 +321,16 @@ export default function OrderEditForm({ order, products }: OrderEditFormProps) {
       )}
 
       <div className="flex items-center justify-between">
-        <div className="text-sm text-neutral-500">
-          Total atual:{" "}
-          <span className="font-semibold text-neutral-900">
-            {brazilianCurrency(total)}
-          </span>
-        </div>
+        {!hidePrices && (
+          <div className="text-sm text-neutral-500">
+            Total atual:{" "}
+            <span className="font-semibold text-neutral-900">
+              {brazilianCurrency(total)}
+            </span>
+          </div>
+        )}
+        {hidePrices && ""}
+
         <div className="flex gap-3">
           <Button
             type="button"
@@ -328,7 +344,11 @@ export default function OrderEditForm({ order, products }: OrderEditFormProps) {
             onClick={handleSubmit}
             disabled={saving || hasItemErrors}
           >
-            {saving ? "Salvando..." : "Salvar alterações"}
+            {saving
+              ? "Salvando..."
+              : isStatusOnly
+                ? "Salvar status"
+                : "Salvar alterações"}
           </Button>
         </div>
       </div>

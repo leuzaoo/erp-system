@@ -18,7 +18,7 @@ export default async function EditOrderPage({
   if (!id) notFound();
 
   const supabase = await supabaseRSC();
-  const { user, role } = await requireRole(["admin", "vendedor"]);
+  const { user } = await requireRole(["admin", "vendedor", "fabrica"]);
 
   if (!user) {
     notFound();
@@ -33,6 +33,9 @@ export default async function EditOrderPage({
   if (profileErr || !profile) {
     notFound();
   }
+
+  const userRole = profile.role as "admin" | "vendedor" | "fabrica";
+  const isFactory = userRole === "fabrica";
 
   const { data: order, error: orderErr } = await supabase
     .from("orders")
@@ -76,7 +79,7 @@ export default async function EditOrderPage({
   }
 
   const allowed = canEditOrder({
-    role,
+    role: userRole,
     userId: user.id,
     sellerId: order.seller_id,
   });
@@ -109,17 +112,21 @@ export default async function EditOrderPage({
     );
   }
 
+  const orderNumber = (order.number || order.id.slice(0, 5)).toUpperCase();
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">
           Editar pedido{" "}
           <span className="font-mono text-base text-neutral-500">
-            #{(order.number || order.id.slice(0, 5)).toUpperCase()}
+            #{orderNumber}
           </span>
         </h1>
         <p className="mt-1 text-sm text-neutral-500">
-          Ajuste itens, dimensões e status deste pedido.
+          {isFactory
+            ? "Altere apenas o status deste pedido. Itens, quantidades e valores são somente leitura para a fábrica."
+            : "Ajuste itens, dimensões e status deste pedido."}
         </p>
       </div>
 
@@ -142,6 +149,8 @@ export default async function EditOrderPage({
             })) ?? [],
         }}
         products={products}
+        mode={isFactory ? "status-only" : "full"}
+        hidePrices={isFactory}
       />
     </div>
   );

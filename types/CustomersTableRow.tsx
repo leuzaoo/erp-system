@@ -1,7 +1,7 @@
 export type CustomersTableRow = {
   id: string;
   name: string;
-  document?: string;
+  document: string;
   phone: string;
   state: string;
   city: string;

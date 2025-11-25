@@ -1,7 +1,7 @@
 export type AppRole = "admin" | "vendedor" | "fabrica";
 
 export const ALLOW_SELLER_EDIT_OWN_ORDERS = false;
-export const ALLOW_FACTORY_EDIT_ORDERS = false;
+export const ALLOW_FACTORY_EDIT_ORDERS = true;
 
 export function canEditOrder(params: {
   role: AppRole;

@@ -63,12 +63,14 @@ export default async function OrdersPage({
       const seller = normalize(o.seller_name_snapshot);
       const number = normalize(o.number);
       const idFull = normalize(o.id);
+      const status = normalize(o.status);
       const idShort = normalize(o.id.slice(0, 5));
 
       return (
         seller.includes(q) ||
         number.includes(q) ||
         idShort.includes(q) ||
+        status.includes(q) ||
         idFull.includes(q)
       );
     });
@@ -78,7 +80,6 @@ export default async function OrdersPage({
     {
       header: "Pedido",
       accessorFn: (r) => r.id.slice(0, 5),
-      width: 140,
       cell: (value, row) => (
         <Link
           href={`/orders/${row.id}`}
@@ -96,7 +97,7 @@ export default async function OrdersPage({
     {
       header: "Status",
       accessorKey: "status",
-      width: 140,
+      align: "left",
       cell: (value) => {
         const status = String(value ?? "");
 
@@ -116,7 +117,6 @@ export default async function OrdersPage({
       header: "Criado em",
       accessorKey: "created_at",
       align: "right",
-      width: 170,
       cell: (value) => moment(String(value)).format("DD/MM/YYYY - HH:mm"),
     },
   ];
@@ -155,7 +155,10 @@ export default async function OrdersPage({
               Resultados para: “<span className="font-bold">{rawQ}</span>”.
             </>
           ) : role === "fabrica" ? (
-            "Lista de pedidos (exceto os ainda não enviados para aprovação)."
+            <p className="mb-2">
+              Pedidos com <b>status</b> de <b>*Aprovado*</b>, está pronto para
+              iniciar fabricação.{" "}
+            </p>
           ) : undefined
         }
         emptyMessage="Nenhum pedido encontrado."

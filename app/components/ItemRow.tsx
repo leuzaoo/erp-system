@@ -22,6 +22,7 @@ type Props = {
   onChangeHeight: (idx: number, next: number | "") => void;
 
   onRemove: () => void;
+  hidePrices?: boolean;
 };
 
 export default function ItemRow({
@@ -37,14 +38,15 @@ export default function ItemRow({
   onChangeWidth,
   onChangeHeight,
   onRemove,
+  hidePrices = false,
 }: Props) {
   const itemTotal = Number(it.unit_price || 0) * Number(it.quantity || 0);
 
   return (
     <li className="p-4">
       <div className="flex flex-col gap-3">
-        <div className="flex w-full items-start justify-between gap-4">
-          <div className="w-full md:col-span-2">
+        <div className="flex w-full flex-wrap items-start justify-between gap-4">
+          <div className="w-full md:flex-1">
             <label className="text-darker mb-1 block text-sm font-bold">
               Produto
             </label>
@@ -69,17 +71,19 @@ export default function ItemRow({
             )}
           </div>
 
-          <div className="w-full">
-            <Input
-              label="Preço unitário"
-              type="number"
-              step="0.01"
-              value={it.unit_price}
-              onChange={(e) => onChangeUnitPrice(idx, e.target.value)}
-            />
-          </div>
+          {!hidePrices && (
+            <div className="w-full md:w-40">
+              <Input
+                label="Preço unitário"
+                type="number"
+                step="0.01"
+                value={it.unit_price}
+                onChange={(e) => onChangeUnitPrice(idx, e.target.value)}
+              />
+            </div>
+          )}
 
-          <div className="w-full">
+          <div className="w-full md:w-40">
             <Input
               label="Quantidade"
               type="number"
@@ -90,8 +94,8 @@ export default function ItemRow({
           </div>
         </div>
 
-        <div className="flex w-full items-start justify-between gap-4">
-          <div className="w-full">
+        <div className="flex w-full flex-wrap items-start justify-between gap-4">
+          <div className="w-full md:flex-1">
             <Input
               label="Comprimento (cm)"
               type="number"
@@ -113,7 +117,7 @@ export default function ItemRow({
             )}
           </div>
 
-          <div className="w-full">
+          <div className="w-full md:flex-1">
             <Input
               label="Largura (cm)"
               type="number"
@@ -135,7 +139,7 @@ export default function ItemRow({
             )}
           </div>
 
-          <div className="w-full">
+          <div className="w-full md:flex-1">
             <Input
               label="Altura (cm)"
               type="number"
@@ -159,20 +163,24 @@ export default function ItemRow({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between">
-        <div className="text-xs text-neutral-500">Subtotal do item</div>
-        <div className="font-semibold">{brazilianCurrency(itemTotal)}</div>
-      </div>
+      {!hidePrices && (
+        <div className="mt-3 flex items-center justify-between">
+          <div className="text-xs text-neutral-500">Subtotal do item</div>
+          <div className="font-semibold">{brazilianCurrency(itemTotal)}</div>
+        </div>
+      )}
 
-      <div className="mt-3 flex justify-end">
-        <Button
-          type="button"
-          onClick={onRemove}
-          className="bg-transparent! p-0! text-sm text-red-500! hover:underline"
-        >
-          Remover item
-        </Button>
-      </div>
+      {!hidePrices && (
+        <div className="mt-3 flex justify-end">
+          <Button
+            type="button"
+            onClick={onRemove}
+            className="bg-transparent! p-0! text-sm text-red-500! hover:underline"
+          >
+            Remover item
+          </Button>
+        </div>
+      )}
     </li>
   );
 }

@@ -63,9 +63,12 @@ export default function UsersPageClient({ users }: Props) {
       accessorKey: "name",
       cell: (value, row) => (
         <div className="flex flex-col">
-          <span className="font-semibold text-neutral-900">
+          <Link
+            href={`/users/${row.id}`}
+            className="font-semibold text-neutral-900 hover:underline"
+          >
             {String(value)}
-          </span>
+          </Link>
           <span className="text-xs text-neutral-500">
             #{row.id.slice(0, 5).toUpperCase()}
           </span>

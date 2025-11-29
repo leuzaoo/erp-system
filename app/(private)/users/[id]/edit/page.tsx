@@ -5,7 +5,7 @@ import { supabaseRSC } from "@/utils/supabase/rsc";
 
 import type { UserRow } from "@/types/UserRow";
 
-import UserAccountEditForm from "@/app/components/forms/UserAccountEditForm";
+import EditUserForm from "@/app/components/forms/EditUserForm";
 
 export default async function UserEditPage({
   params,
@@ -70,7 +70,7 @@ export default async function UserEditPage({
       </header>
 
       <section className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <UserAccountEditForm user={user} />
+        <EditUserForm user={user} />
       </section>
     </div>
   );

@@ -2,12 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 
-import type { AppRole } from "@/utils/permissions";
-
-import { requireRole } from "@/utils/auth/requireRole";
-
 import { supabaseAdmin } from "@/utils/supabase/admin";
+import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
+
+import type { AppRole } from "@/utils/permissions";
 
 type CreateUserPayload = {
   name: string;
@@ -17,9 +16,10 @@ type CreateUserPayload = {
 };
 
 type UpdateUserPayload = {
-  name: string;
-  email: string;
-  role: AppRole;
+  name?: string;
+  email?: string;
+  role?: AppRole;
+  password?: string;
 };
 
 export async function createUserAction(
@@ -30,16 +30,12 @@ export async function createUserAction(
   const name = payload.name.trim();
   const email = payload.email.trim().toLowerCase();
   const role = payload.role;
-  const password = payload.password.trim();
+  const password = payload.password;
 
   if (!name || !email || !password) {
-    return { ok: false, message: "Preencha nome, e-mail e senha." };
-  }
-
-  if (password.length < 6) {
     return {
       ok: false,
-      message: "A senha deve ter pelo menos 6 caracteres.",
+      message: "Preencha nome, e-mail e senha do usuário.",
     };
   }
 
@@ -49,18 +45,17 @@ export async function createUserAction(
     await adminClient.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
     });
 
   if (authError || !authData?.user) {
     return {
       ok: false,
-      message: authError?.message ?? "Erro ao criar usuário de autenticação.",
+      message:
+        authError?.message ?? "Erro ao criar usuário de autenticação (auth).",
     };
   }
 
   const authUser = authData.user;
-
   const supabase = await supabaseRSC();
 
   const { error: profileError } = await supabase.from("profiles").insert({
@@ -72,7 +67,8 @@ export async function createUserAction(
   });
 
   if (profileError) {
-    await adminClient.auth.admin.deleteUser(authUser.id).catch(() => {});
+    await adminClient.auth.admin.deleteUser(authUser.id);
+
     return {
       ok: false,
       message: `Erro ao criar perfil: ${profileError.message}`,
@@ -90,48 +86,57 @@ export async function updateUserAction(
 ): Promise<{ ok: boolean; message?: string }> {
   await requireRole(["admin"]);
 
-  const name = payload.name.trim();
-  const email = payload.email.trim().toLowerCase();
+  const name = payload.name?.trim();
+  const email = payload.email?.trim().toLowerCase();
   const role = payload.role;
+  const password = payload.password?.trim();
 
-  if (!name || !email || !role) {
-    return { ok: false, message: "Preencha nome, e-mail e função." };
+  if (!name && !email && !role && !password) {
+    return { ok: false, message: "Nenhuma alteração informada." };
   }
 
-  const adminClient = supabaseAdmin();
   const supabase = await supabaseRSC();
+  const adminClient = supabaseAdmin();
 
-  const { error: authError } = await adminClient.auth.admin.updateUserById(
-    userId,
-    {
-      email,
-    },
-  );
+  const authUpdate: { email?: string; password?: string } = {};
+  if (email) authUpdate.email = email;
+  if (password) authUpdate.password = password;
 
-  if (authError) {
-    return {
-      ok: false,
-      message: authError.message ?? "Erro ao atualizar usuário de login.",
-    };
+  if (Object.keys(authUpdate).length > 0) {
+    const { error: authError } = await adminClient.auth.admin.updateUserById(
+      userId,
+      authUpdate,
+    );
+
+    if (authError) {
+      return {
+        ok: false,
+        message: `Erro ao atualizar conta de login: ${authError.message}`,
+      };
+    }
   }
 
-  const { error: profileError } = await supabase
-    .from("profiles")
-    .update({
-      name,
-      email,
-      role,
-    })
-    .eq("id", userId);
+  const profileUpdate: Record<string, unknown> = {};
+  if (name) profileUpdate.name = name;
+  if (email) profileUpdate.email = email;
+  if (role) profileUpdate.role = role;
 
-  if (profileError) {
-    return {
-      ok: false,
-      message: profileError.message ?? "Erro ao atualizar perfil.",
-    };
+  if (Object.keys(profileUpdate).length > 0) {
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update(profileUpdate)
+      .eq("id", userId);
+
+    if (profileError) {
+      return {
+        ok: false,
+        message: `Erro ao atualizar perfil: ${profileError.message}`,
+      };
+    }
   }
 
   revalidatePath("/users");
+  revalidatePath(`/users/${userId}`);
 
   return { ok: true };
 }
@@ -141,8 +146,8 @@ export async function deleteUserAction(
 ): Promise<{ ok: boolean; message?: string }> {
   await requireRole(["admin"]);
 
-  const adminClient = supabaseAdmin();
   const supabase = await supabaseRSC();
+  const adminClient = supabaseAdmin();
 
   const { error: profileError } = await supabase
     .from("profiles")
@@ -152,7 +157,7 @@ export async function deleteUserAction(
   if (profileError) {
     return {
       ok: false,
-      message: profileError.message ?? "Erro ao remover perfil do usuário.",
+      message: `Erro ao remover perfil: ${profileError.message}`,
     };
   }
 
@@ -161,8 +166,7 @@ export async function deleteUserAction(
   if (authError) {
     return {
       ok: false,
-      message:
-        authError.message ?? "Perfil removido, mas falhou ao remover login.",
+      message: `Perfil removido, mas houve erro ao apagar conta de login: ${authError.message}`,
     };
   }
 

@@ -27,13 +27,18 @@ export default function EditUserForm({ user }: EditUserFormProps) {
     setError(null);
 
     const form = new FormData(e.currentTarget);
+
     const name = String(form.get("name") || "").trim();
     const email = String(form.get("email") || "").trim();
     const role = String(form.get("role") || "").trim() as AppRole;
+
     const passwordRaw = String(form.get("password") || "").trim();
+    const status = String(form.get("user_status") || "ativo") as
+      | "ativo"
+      | "inativo";
 
     if (!name || !email || !role) {
-      setError("Preencha nome, e-mail e função do usuário.");
+      setError("Preencha nome, e-mail e função.");
       return;
     }
 
@@ -42,18 +47,17 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       email: string;
       role: AppRole;
       password?: string;
-    } = { name, email, role };
+      user_status: "ativo" | "inativo";
+    } = { name, email, role, user_status: status };
 
-    if (passwordRaw) {
-      payload.password = passwordRaw;
-    }
+    if (passwordRaw) payload.password = passwordRaw;
 
     setSubmitting(true);
     const res = await updateUserAction(user.id, payload);
     setSubmitting(false);
 
     if (!res.ok) {
-      setError(res.message ?? "Não foi possível atualizar o usuário.");
+      setError(res.message ?? "Erro ao atualizar usuário.");
       return;
     }
 
@@ -71,7 +75,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
     setDeleting(false);
 
     if (!res.ok) {
-      setError(res.message ?? "Não foi possível remover o usuário.");
+      setError(res.message ?? "Erro ao remover usuário.");
       return;
     }
 
@@ -98,7 +102,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         name="email"
         label="E-mail*"
         type="email"
-        defaultValue={user.email ?? ""}
+        defaultValue={user.email}
         required
       />
 
@@ -107,16 +111,15 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         label="Nova senha (opcional)"
         type="password"
         autoComplete="new-password"
-        placeholder="Preencha apenas se quiser redefinir a senha"
+        placeholder="Preencha apenas se quiser redefinir"
       />
 
       <div>
         <label className="mb-1 block text-sm font-semibold">Função*</label>
         <select
           name="role"
-          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm"
           defaultValue={user.role}
-          required
         >
           <option value="admin">Admin</option>
           <option value="vendedor">Vendedor</option>
@@ -124,12 +127,26 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         </select>
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-3">
+      <div className="max-w-max">
+        <label className="mb-1 block text-sm font-semibold">
+          Status do usuário*
+        </label>
+        <select
+          name="user_status"
+          defaultValue={user.user_status ?? "ativo"}
+          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+        </select>
+      </div>
+
+      <div className="mt-6 flex items-center justify-between">
         <button
           type="button"
           onClick={handleDelete}
           disabled={deleting || submitting}
-          className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700 disabled:opacity-40"
+          className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700"
         >
           {deleting ? (
             <Loader2Icon className="h-4 w-4 animate-spin" />
@@ -148,16 +165,13 @@ export default function EditUserForm({ user }: EditUserFormProps) {
           >
             Cancelar
           </Button>
+
           <Button
             type="submit"
-            className="flex w-40 justify-center hover:bg-blue-600"
             disabled={submitting || deleting}
+            className="flex w-40 justify-center hover:bg-blue-600"
           >
-            {submitting ? (
-              <Loader2Icon className="animate-spin" />
-            ) : (
-              "Salvar alterações"
-            )}
+            {submitting ? <Loader2Icon className="animate-spin" /> : "Salvar"}
           </Button>
         </div>
       </div>

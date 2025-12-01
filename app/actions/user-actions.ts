@@ -20,6 +20,7 @@ type UpdateUserPayload = {
   email?: string;
   role?: AppRole;
   password?: string;
+  user_status?: "ativo" | "inativo";
 };
 
 export async function createUserAction(
@@ -45,6 +46,7 @@ export async function createUserAction(
     await adminClient.auth.admin.createUser({
       email,
       password,
+      email_confirm: true, // sem confirmação de email
     });
 
   if (authError || !authData?.user) {
@@ -90,14 +92,12 @@ export async function updateUserAction(
   const email = payload.email?.trim().toLowerCase();
   const role = payload.role;
   const password = payload.password?.trim();
-
-  if (!name && !email && !role && !password) {
-    return { ok: false, message: "Nenhuma alteração informada." };
-  }
+  const user_status = payload.user_status;
 
   const supabase = await supabaseRSC();
   const adminClient = supabaseAdmin();
 
+  // Atualiza email/senha no auth
   const authUpdate: { email?: string; password?: string } = {};
   if (email) authUpdate.email = email;
   if (password) authUpdate.password = password;
@@ -116,10 +116,12 @@ export async function updateUserAction(
     }
   }
 
+  // Atualiza perfil na tabela profiles
   const profileUpdate: Record<string, unknown> = {};
   if (name) profileUpdate.name = name;
   if (email) profileUpdate.email = email;
   if (role) profileUpdate.role = role;
+  if (user_status) profileUpdate.user_status = user_status;
 
   if (Object.keys(profileUpdate).length > 0) {
     const { error: profileError } = await supabase

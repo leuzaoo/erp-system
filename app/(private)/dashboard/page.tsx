@@ -5,6 +5,8 @@ import type { OrderRow } from "@/types/OrderRow";
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import { requireAuth } from "@/utils/auth/requireAuth";
 import { supabaseRSC } from "@/utils/supabase/rsc";
+import { createdAt } from "@/utils/createdAt";
+import { shortId } from "@/utils/shortId";
 import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_BADGE_CLASS,
@@ -153,7 +155,7 @@ export default async function DashboardPage() {
                   href={`/orders/${row.id}`}
                   className="font-bold hover:underline"
                 >
-                  #{(row.number ?? row.id.slice(0, 5)).toUpperCase()}
+                  {shortId(row.id)}
                 </Link>
               ),
             },
@@ -186,8 +188,7 @@ export default async function DashboardPage() {
             },
             {
               header: "Criado",
-              cell: (_, row) =>
-                new Date(row.created_at).toLocaleDateString("pt-BR"),
+              cell: (_, row) => createdAt(row.created_at),
             },
           ]}
         />

@@ -1,9 +1,8 @@
 import { ChevronLeftIcon, PencilIcon } from "lucide-react";
 import Link from "next/link";
 
+import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
-
-import { requireRole } from "@/types/RequireRoleResult";
 
 import KpiCard from "@/app/components/KpiCard";
 import Button from "@/app/components/Button";

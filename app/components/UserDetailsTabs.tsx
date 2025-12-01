@@ -2,12 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import moment from "moment";
 
 import type { CustomersTableRow } from "@/types/CustomersTableRow";
 import type { SalesTableRow } from "@/types/SalesTableRow";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
+import { createdAt } from "@/utils/createdAt";
+import { shortId } from "@/utils/shortId";
 import {
   ORDER_STATUS_BADGE_CLASS,
   ORDER_STATUS_LABELS,
@@ -38,14 +39,14 @@ export default function UserDetailsTabs({ orders, customers }: Props) {
   const salesColumns: Column<SalesTableRow>[] = [
     {
       header: "Pedido",
-      accessorFn: (r) => r.id.slice(0, 5),
+
       width: 140,
       cell: (value, row) => (
         <Link
           href={`/orders/${row.id}`}
           className="font-bold uppercase hover:underline"
         >
-          #{String(value)}
+          {shortId(row.id)}
         </Link>
       ),
     },
@@ -89,7 +90,7 @@ export default function UserDetailsTabs({ orders, customers }: Props) {
       accessorKey: "created_at",
       align: "right",
       width: 190,
-      cell: (value) => moment(String(value)).format("DD/MM/YYYY - HH:mm"),
+      cell: (value) => createdAt(String(value)),
     },
   ];
 
@@ -117,7 +118,7 @@ export default function UserDetailsTabs({ orders, customers }: Props) {
       accessorKey: "created_at",
       align: "right",
       width: 190,
-      cell: (value) => moment(String(value)).format("DD/MM/YYYY"),
+      cell: (value) => createdAt(String(value)),
     },
   ];
 

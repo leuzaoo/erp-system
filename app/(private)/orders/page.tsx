@@ -1,11 +1,12 @@
 import { SearchIcon } from "lucide-react";
 import Link from "next/link";
-import moment from "moment";
 
 import type { SalesTableRow } from "@/types/SalesTableRow";
 
 import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
+import { createdAt } from "@/utils/createdAt";
+import { shortId } from "@/utils/shortId";
 import {
   ORDER_STATUS_BADGE_CLASS,
   ORDER_STATUS_LABELS,
@@ -85,7 +86,7 @@ export default async function OrdersPage({
           href={`/orders/${row.id}`}
           className="font-bold uppercase hover:underline"
         >
-          #{String(value)}
+          {shortId(row.id)}
         </Link>
       ),
     },
@@ -117,7 +118,7 @@ export default async function OrdersPage({
       header: "Criado em",
       accessorKey: "created_at",
       align: "right",
-      cell: (value) => moment(String(value)).format("DD/MM/YYYY - HH:mm"),
+      cell: (value, row) => createdAt(row.created_at),
     },
   ];
 

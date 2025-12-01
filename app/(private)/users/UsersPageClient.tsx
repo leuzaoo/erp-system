@@ -105,7 +105,7 @@ export default function UsersPageClient({ users }: Props) {
                 isActive ? "bg-emerald-500" : "bg-neutral-400",
               ].join(" ")}
             />
-            {isActive ? "Ativo" : status}
+            {isActive ? "Ativo" : "Inativo"}
           </span>
         );
       },

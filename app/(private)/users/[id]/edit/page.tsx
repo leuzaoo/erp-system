@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 
 import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
+import { createdAt } from "@/utils/createdAt";
+import { shortId } from "@/utils/shortId";
 
 import type { UserRow } from "@/types/UserRow";
 
@@ -40,15 +42,6 @@ export default async function UserEditPage({
     notFound();
   }
 
-  const shortId = user.id.slice(0, 5).toUpperCase();
-  const createdAt = user.created_at
-    ? new Date(user.created_at).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      })
-    : "—";
-
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between">
@@ -63,9 +56,9 @@ export default async function UserEditPage({
         <div className="text-right text-xs text-neutral-500">
           <p>
             ID do usuário:{" "}
-            <span className="font-mono font-semibold">#{shortId}</span>
+            <span className="font-mono font-semibold">{shortId(user.id)}</span>
           </p>
-          <p>Usuário criado em: {createdAt}</p>
+          <p>Usuário criado em: {createdAt(user.created_at)}</p>
         </div>
       </header>
 

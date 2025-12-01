@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
+import { createdAt } from "@/utils/createdAt";
+import { shortId } from "@/utils/shortId";
 
 import { CustomersTableRow } from "@/types/CustomersTableRow";
 
@@ -44,28 +46,22 @@ export default async function CustomerViewPage({
     );
   }
 
-  const shortId = customer.id.slice(0, 5).toUpperCase();
-  const createdAt = customer.created_at
-    ? new Date(customer.created_at).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      })
-    : "—";
-
   return (
     <div className="space-y-6">
       <section className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{customer.name}</h1>
           <p className="mt-1 text-sm">
-            ID do cliente: <span className="font-medium">#{shortId}</span>
+            ID do cliente:{" "}
+            <span className="font-medium">{shortId(customer.id)}</span>
           </p>
         </div>
 
         <div className="text-right text-sm">
-          <p>Cadastrado em</p>
-          <p className="font-medium text-neutral-800">{createdAt}</p>
+          <p>Cadastrado em:</p>
+          <p className="font-medium text-neutral-800">
+            {createdAt(customer.created_at)}
+          </p>
         </div>
       </section>
 

@@ -4,9 +4,11 @@ import { PlusIcon, SearchIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import Link from "next/link";
-import moment from "moment";
 
 import type { UserRow } from "@/types/UserRow";
+
+import { createdAt } from "@/utils/createdAt";
+import { shortId } from "@/utils/shortId";
 
 import { DataTable, type Column } from "@/app/components/Table";
 import NewUserForm from "@/app/components/forms/NewUserForm";
@@ -69,9 +71,7 @@ export default function UsersPageClient({ users }: Props) {
           >
             {String(value)}
           </Link>
-          <span className="text-xs text-neutral-500">
-            #{row.id.slice(0, 5).toUpperCase()}
-          </span>
+          <span className="text-xs text-neutral-500">{shortId(row.id)}</span>
         </div>
       ),
       width: 280,
@@ -117,7 +117,7 @@ export default function UsersPageClient({ users }: Props) {
       cell: (value) => {
         const role = value as UserRow["role"];
         return (
-          <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
+          <span className="border-pattern-200 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium text-neutral-700">
             {roleLabel[role] ?? role}
           </span>
         );
@@ -128,7 +128,7 @@ export default function UsersPageClient({ users }: Props) {
       accessorKey: "created_at",
       align: "right",
       width: 200,
-      cell: (value) => moment(String(value)).format("DD/MM/YYYY - HH:mm"),
+      cell: (value) => createdAt(String(value)),
     },
     {
       header: "",

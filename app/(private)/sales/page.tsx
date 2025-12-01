@@ -1,6 +1,5 @@
 import { PlusIcon, SearchIcon } from "lucide-react";
 import Link from "next/link";
-import moment from "moment";
 
 import type { SalesTableRow } from "@/types/SalesTableRow";
 
@@ -8,6 +7,8 @@ import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import { requireRole } from "@/utils/auth/requireRole";
 import { canEditOrder } from "@/utils/permissions";
 import { supabaseRSC } from "@/utils/supabase/rsc";
+import { createdAt } from "@/utils/createdAt";
+import { shortId } from "@/utils/shortId";
 import {
   ORDER_STATUS_BADGE_CLASS,
   ORDER_STATUS_LABELS,
@@ -75,13 +76,12 @@ export default async function SalesPage({
   const columns: Column<SalesTableRow>[] = [
     {
       header: "Pedido",
-      accessorFn: (r) => r.id.slice(0, 5),
       cell: (value, row) => (
         <Link
           href={`/orders/${row.id}`}
           className="font-bold uppercase hover:underline"
         >
-          #{String(value)}
+          {shortId(row.id)}
         </Link>
       ),
       width: 140,
@@ -131,7 +131,7 @@ export default async function SalesPage({
       accessorKey: "created_at",
       align: "right",
       width: 170,
-      cell: (value) => moment(String(value)).format("DD/MM/YYYY - HH:mm"),
+      cell: (value, row) => createdAt(row.created_at),
     },
   ];
 

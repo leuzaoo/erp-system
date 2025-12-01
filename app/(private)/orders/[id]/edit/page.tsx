@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 
-import { requireRole } from "@/utils/auth/requireRole";
 import type { OrderEdit } from "@/types/OrderEdit";
 
+import { requireRole } from "@/utils/auth/requireRole";
 import { canEditOrder } from "@/utils/permissions";
 import { supabaseRSC } from "@/utils/supabase/rsc";
+import { shortId } from "@/utils/shortId";
 
 import OrderEditForm from "@/app/components/forms/OrderEditForm";
 
@@ -112,16 +113,11 @@ export default async function EditOrderPage({
     );
   }
 
-  const orderNumber = (order.number || order.id.slice(0, 5)).toUpperCase();
-
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">
-          Editar pedido{" "}
-          <span className="font-mono text-base text-neutral-500">
-            #{orderNumber}
-          </span>
+          Editar pedido {shortId(order.id)}
         </h1>
         <p className="mt-1 text-sm text-neutral-500">
           {isFactory

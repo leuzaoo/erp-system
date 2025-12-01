@@ -8,15 +8,16 @@ import {
   UserIcon,
 } from "lucide-react";
 
+import { createdAtWithHours } from "@/utils/createdAtWithHours";
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
+import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
+import { shortId } from "@/utils/shortId";
 import {
   ORDER_STATUS_BADGE_CLASS,
   ORDER_STATUS_LABELS,
   type OrderStatus,
 } from "@/utils/orderStatus";
-
-import { requireRole } from "@/utils/auth/requireRole";
 
 import type { OrderItemRow } from "@/types/OrderItemRow";
 import type { OrderView } from "@/types/OrderView";
@@ -132,19 +133,12 @@ export default async function OrderViewPage({
     );
   }
 
-  const orderNumber = (order.number ?? order.id.slice(0, 5)).toUpperCase();
-
   const customerName =
     order.customer?.name ?? order.customer_name_snapshot ?? "Cliente";
   const sellerName =
     order.seller?.name ?? order.seller_name_snapshot ?? "Vendedor";
 
   const customerAddress = order.customer;
-
-  const createdAt = new Date(order.created_at).toLocaleString("pt-BR");
-  const updatedAt = order.updated_at
-    ? new Date(order.updated_at).toLocaleString("pt-BR")
-    : "—";
 
   const status = order.status as OrderStatus;
 
@@ -153,7 +147,7 @@ export default async function OrderViewPage({
       <section className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl">
-            Pedido: <span className="font-bold">#{orderNumber}</span>
+            Pedido: <span className="font-bold">{shortId(order.id)}</span>
           </h1>
 
           <p className="mt-1 text-sm font-light opacity-70">
@@ -220,9 +214,13 @@ export default async function OrderViewPage({
             </div>
             <div className="mt-2 flex flex-col">
               <span>Data de criação</span>
-              <p className="my-2 text-sm opacity-70">{createdAt}</p>
+              <p className="my-2 text-sm opacity-70">
+                {createdAtWithHours(order.created_at)}
+              </p>
               <span>Última alteração</span>
-              <p className="mt-2 text-sm opacity-70">{updatedAt}</p>
+              <p className="mt-2 text-sm opacity-70">
+                {createdAtWithHours(order.updated_at)}
+              </p>
             </div>
           </Card>
         </div>

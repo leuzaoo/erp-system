@@ -1,15 +1,12 @@
-import { PencilIcon } from "lucide-react";
-import Link from "next/link";
-
 import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 import { createdAt } from "@/utils/createdAt";
 import { shortId } from "@/utils/shortId";
 
-import { CustomersTableRow } from "@/types/CustomersTableRow";
+import type { CustomersTableRow } from "@/types/CustomersTableRow";
+import type { SalesTableRow } from "@/types/SalesTableRow";
 
-import Button from "@/app/components/Button";
-import Card from "@/app/components/Card";
+import CustomerDetailsTabs from "@/app/components/CustomerDetailsTabs";
 
 export default async function CustomerViewPage({
   params,
@@ -46,6 +43,26 @@ export default async function CustomerViewPage({
     );
   }
 
+  const { data: ordersRaw } = await supabase
+    .from("orders")
+    .select(
+      `
+      id,
+      number,
+      customer_id,
+      customer_name_snapshot,
+      seller_id,
+      seller_name_snapshot,
+      total_price,
+      status,
+      created_at
+    `,
+    )
+    .eq("customer_id", id)
+    .order("created_at", { ascending: false });
+
+  const orders = (ordersRaw ?? []) as SalesTableRow[];
+
   return (
     <div className="space-y-6">
       <section className="flex items-center justify-between">
@@ -65,87 +82,7 @@ export default async function CustomerViewPage({
         </div>
       </section>
 
-      <section className="flex flex-col gap-4 lg:flex-row">
-        <Card>
-          <h2 className="mb-3 text-lg font-bold">Dados do cliente</h2>
-          <dl className="grid gap-3 md:grid-cols-2">
-            <div>
-              <dt className="text-xs uppercase">Nome completo</dt>
-              <dd className="text-sm font-semibold">{customer.name}</dd>
-            </div>
-
-            <div>
-              <dt className="text-xs uppercase">Documento</dt>
-              <dd className="text-sm font-semibold">
-                {customer.document || "—"}
-              </dd>
-            </div>
-
-            <div>
-              <dt className="text-xs uppercase">Telefone</dt>
-              <dd className="text-sm font-semibold">{customer.phone || "—"}</dd>
-            </div>
-
-            <div>
-              <dt className="text-xs uppercase">Criado por (ID do usuário)</dt>
-              <dd className="text-sm font-semibold">
-                {customer.creator?.name ?? "—"}
-              </dd>
-            </div>
-          </dl>
-        </Card>
-
-        <Card>
-          <h2 className="mb-3 text-lg font-semibold">Endereço</h2>
-
-          <div className="space-y-4 text-sm">
-            <p>
-              Rua: <br />
-              <span className="font-semibold">
-                {customer.street && customer.number
-                  ? `${customer.street}, ${customer.number}`
-                  : "—"}
-              </span>
-            </p>
-
-            <p>
-              Bairro: <br />{" "}
-              <span className="font-semibold">{customer.district || "—"}</span>
-            </p>
-
-            <p>
-              Cidade: <br />
-              <span className="font-semibold">
-                {customer.city && customer.state
-                  ? `${customer.city} - ${customer.state}`
-                  : "—"}
-              </span>
-            </p>
-
-            <p>
-              CEP: <br />
-              <span className="font-semibold">
-                {customer.postal_code ? `${customer.postal_code}` : "—"}
-              </span>
-            </p>
-
-            <p>
-              Complemento: <br />
-              <span className="font-semibold">
-                {customer.complement ? `${customer.complement}` : "—"}
-              </span>
-            </p>
-          </div>
-        </Card>
-      </section>
-      <Link
-        href={`/customers/${customer.id}/edit`}
-        className="flex items-center justify-end gap-2 text-sm"
-      >
-        <Button>
-          <PencilIcon size={16} /> Editar
-        </Button>
-      </Link>
+      <CustomerDetailsTabs customer={customer} orders={orders} />
     </div>
   );
 }

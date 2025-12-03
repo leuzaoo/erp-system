@@ -1,11 +1,12 @@
+import { ChevronLeftIcon } from "lucide-react";
 import Link from "next/link";
 
+import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
+import { shortId } from "@/utils/shortId";
 
-import { requireRole } from "@/types/RequireRoleResult";
-
-import Input from "@/app/components/Input";
 import Button from "@/app/components/Button";
+import Input from "@/app/components/Input";
 
 function Field({
   label,
@@ -16,7 +17,9 @@ function Field({
 }) {
   return (
     <div className="space-y-1">
-      <div className="text-sm text-neutral-400">{label}</div>
+      <div className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">
+        {label}
+      </div>
       {children}
     </div>
   );
@@ -49,79 +52,138 @@ export default async function ProductEditPage({
 
   async function action(formData: FormData) {
     "use server";
-    const { updateProduct } = await import(
-      "../../../../actions/product-actions"
-    );
+    const { updateProduct } = await import("@/app/actions/product-actions");
     await updateProduct(product?.id, formData);
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">Editar Produto</h1>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <Link
+          href={`/products/${product.id}`}
+          className="flex items-center gap-2 text-sm text-neutral-600 transition hover:text-neutral-900 hover:underline"
+        >
+          <ChevronLeftIcon size={16} />
+          Voltar para produto
+        </Link>
+      </div>
 
-      <form action={action} className="space-y-4">
-        <Field label="Nome">
-          <Input name="name" defaultValue={product.name} required />
-        </Field>
+      <section className="rounded-2xl border border-neutral-200 bg-white/70 p-6 shadow-sm backdrop-blur">
+        <header className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Editar produto
+            </h1>
+            <p className="mt-1 text-sm text-neutral-500">
+              Ajuste as informações do produto. As dimensões são opcionais e
+              servem como limite máximo por pedido.
+            </p>
+          </div>
 
-        <Field label="Valor">
-          <Input
-            name="price"
-            type="number"
-            step="0.01"
-            min="0"
-            defaultValue={String(product.price)}
-            required
-          />
-        </Field>
+          <div className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-600">
+            ID interno:{" "}
+            <span className="font-mono text-neutral-900">
+              {shortId(product.id)}
+            </span>
+          </div>
+        </header>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field label="Comprimento máximo (cm)">
-            <Input
-              name="max_length_cm"
-              type="number"
-              step="0.01"
-              min="0"
-              defaultValue={product.max_length_cm ?? ""}
-            />
-          </Field>
-          <Field label="Largura máxima (cm)">
-            <Input
-              name="max_width_cm"
-              type="number"
-              step="0.01"
-              min="0"
-              defaultValue={product.max_width_cm ?? ""}
-            />
-          </Field>
-          <Field label="Altura máxima (cm)">
-            <Input
-              name="max_height_cm"
-              type="number"
-              step="0.01"
-              min="0"
-              defaultValue={product.max_height_cm ?? ""}
-            />
-          </Field>
-        </div>
+        <form action={action} className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Nome">
+              <Input
+                name="name"
+                defaultValue={product.name}
+                required
+                placeholder="Ex.: Sofá retrátil"
+              />
+            </Field>
 
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            name="active"
-            defaultChecked={product.active}
-            className="accent-neutral-200"
-          />
-          Ativo
-        </label>
+            <Field label="Valor (R$)">
+              <Input
+                name="price"
+                type="number"
+                step="0.01"
+                min="0"
+                defaultValue={String(product.price)}
+                required
+                placeholder="0,00"
+              />
+            </Field>
+          </div>
 
-        <div className="flex gap-2">
-          <Link href={`/products/${product.id}`}>
-            <Button variant="outline">Cancelar</Button>
-          </Link>
-          <Button type="submit">Salvar</Button>
-        </div>
-      </form>
+          <div>
+            <p className="mb-2 text-xl font-bold">
+              Dimensões máximas (opcional)
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <Field label="Comprimento máximo (cm)">
+                <Input
+                  name="max_length_cm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  defaultValue={product.max_length_cm ?? ""}
+                  placeholder="Ex.: 250"
+                />
+              </Field>
+              <Field label="Largura máxima (cm)">
+                <Input
+                  name="max_width_cm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  defaultValue={product.max_width_cm ?? ""}
+                  placeholder="Ex.: 120"
+                />
+              </Field>
+              <Field label="Altura máxima (cm)">
+                <Input
+                  name="max_height_cm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  defaultValue={product.max_height_cm ?? ""}
+                  placeholder="Ex.: 40"
+                />
+              </Field>
+            </div>
+            <p className="mt-2 text-sm text-neutral-500">
+              Esses limites serão exibidos na tela de edição de pedidos para
+              ajudar na conferência das medidas.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm">
+            <div>
+              <p className="font-semibold text-neutral-800">Produto ativo</p>
+              <p className="text-xs text-neutral-500">
+                Desmarque para pausar o produto sem removê-lo do sistema.
+              </p>
+            </div>
+            <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="active"
+                defaultChecked={product.active}
+                className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-neutral-700">
+                {product.active ? "Ativo" : "Inativo"}
+              </span>
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Link href={`/products/${product.id}`}>
+              <Button variant="outline">Cancelar</Button>
+            </Link>
+            <Button type="submit" className="px-6">
+              Salvar alterações
+            </Button>
+          </div>
+        </form>
+      </section>
     </div>
   );
 }

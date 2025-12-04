@@ -10,6 +10,7 @@ export type Column<T> = {
   width?: string | number;
   className?: string;
   headerClassName?: string;
+  sortable?: boolean;
 };
 
 export type DataTableProps<T> = {
@@ -23,6 +24,12 @@ export type DataTableProps<T> = {
   stickyHeader?: boolean;
   className?: string;
 };
+
+function getCellRawValue<T>(row: T, column: Column<T>): unknown {
+  if (column.accessorFn) return column.accessorFn(row);
+  if (column.accessorKey) return row[column.accessorKey];
+  return undefined;
+}
 
 export function DataTable<T>({
   columns,
@@ -80,7 +87,7 @@ export function DataTable<T>({
           <tbody>
             {!data?.length && (
               <tr>
-                <td className={clsx(pad, "")} colSpan={columns.length}>
+                <td className={clsx(pad)} colSpan={columns.length}>
                   {emptyMessage}
                 </td>
               </tr>
@@ -97,18 +104,13 @@ export function DataTable<T>({
                 )}
               >
                 {columns.map((c, ci) => {
-                  const raw = c.accessorFn
-                    ? c.accessorFn(row)
-                    : c.accessorKey
-                      ? row[c.accessorKey]
-                      : undefined;
+                  const raw = getCellRawValue(row, c);
 
                   return (
                     <td
                       key={ci}
                       className={clsx(
                         pad,
-                        "",
                         c.align === "center" && "text-center",
                         c.align === "right" && "text-right",
                         c.className,

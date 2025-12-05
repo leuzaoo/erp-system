@@ -1,7 +1,16 @@
-import { SearchIcon } from "lucide-react";
+import {
+  ArrowDown01Icon,
+  ArrowDown10Icon,
+  ArrowDownAZIcon,
+  ArrowDownUpIcon,
+  ArrowDownZAIcon,
+  SearchIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 import type { SalesTableRow } from "@/types/SalesTableRow";
+import type { SearchParams } from "@/types/SearchParams";
+import type { SortField } from "@/types/SortField";
 
 import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
@@ -16,17 +25,21 @@ import { DataTable, type Column } from "@/app/components/Table";
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
 
-type SearchParams = {
-  q?: string;
-};
-
 export default async function OrdersPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { q: qParam = "" } = await searchParams;
+  const { q: qParam = "", sort: sortParam, dir: dirParam } = await searchParams;
   const rawQ = qParam.trim();
+
+  const sortField: SortField | undefined =
+    sortParam === "status" || sortParam === "created_at"
+      ? sortParam
+      : undefined;
+
+  const sortDir: "asc" | "desc" =
+    dirParam === "desc" || dirParam === "asc" ? dirParam : "asc";
 
   const { role } = await requireRole(["admin", "fabrica"]);
   const supabase = await supabaseRSC();
@@ -77,6 +90,45 @@ export default async function OrdersPage({
     });
   }
 
+  // Ordenação client-side, igual /sales
+  if (sortField === "status") {
+    filtered = [...filtered].sort((a, b) => {
+      const sa = String(a.status ?? "");
+      const sb = String(b.status ?? "");
+      const base = sa.localeCompare(sb, "pt-BR", {
+        numeric: true,
+        sensitivity: "base",
+      });
+      return sortDir === "asc" ? base : -base;
+    });
+  } else if (sortField === "created_at") {
+    filtered = [...filtered].sort((a, b) => {
+      const da = new Date(a.created_at).getTime();
+      const db = new Date(b.created_at).getTime();
+      const base = da - db;
+      return sortDir === "asc" ? base : -base;
+    });
+  }
+
+  const buildSortHref = (field: SortField) => {
+    const isCurrent = sortField === field;
+    const nextDir: "asc" | "desc" = !isCurrent
+      ? "asc"
+      : sortDir === "asc"
+        ? "desc"
+        : "asc";
+
+    const params = new URLSearchParams();
+    if (rawQ) params.set("q", rawQ);
+    params.set("sort", field);
+    params.set("dir", nextDir);
+
+    return `/orders?${params.toString()}`;
+  };
+
+  const isStatusSorted = sortField === "status";
+  const isCreatedSorted = sortField === "created_at";
+
   const columns: Column<SalesTableRow>[] = [
     {
       header: "Pedido",
@@ -96,7 +148,23 @@ export default async function OrdersPage({
       cell: (value) => (value ?? "—") as string,
     },
     {
-      header: "Status",
+      header: (
+        <Link
+          href={buildSortHref("status")}
+          className="hover:bg-pattern-100 flex max-w-max items-center gap-1 rounded-md px-2"
+        >
+          <span className="flex items-center gap-1">
+            <span>Status</span>
+            {!isStatusSorted ? (
+              <ArrowDownUpIcon size={16} />
+            ) : sortDir === "asc" ? (
+              <ArrowDownAZIcon size={16} />
+            ) : (
+              <ArrowDownZAIcon size={16} />
+            )}
+          </span>
+        </Link>
+      ),
       accessorKey: "status",
       align: "left",
       cell: (value) => {
@@ -115,7 +183,23 @@ export default async function OrdersPage({
       },
     },
     {
-      header: "Criado em",
+      header: (
+        <Link
+          href={buildSortHref("created_at")}
+          className="hover:bg-pattern-100 ml-auto flex max-w-max items-center gap-1 rounded-md px-2"
+        >
+          <span className="flex items-center gap-1">
+            <span>Criado em</span>
+            {!isCreatedSorted ? (
+              <ArrowDownUpIcon size={16} />
+            ) : sortDir === "asc" ? (
+              <ArrowDown01Icon size={16} />
+            ) : (
+              <ArrowDown10Icon size={16} />
+            )}
+          </span>
+        </Link>
+      ),
       accessorKey: "created_at",
       align: "right",
       cell: (value, row) => createdAt(row.created_at),
@@ -157,8 +241,8 @@ export default async function OrdersPage({
             </>
           ) : role === "fabrica" ? (
             <p className="mb-2">
-              Pedidos com <b>status</b> de <b>*Aprovado*</b>, está pronto para
-              iniciar fabricação.{" "}
+              Pedidos com <b>status</b> de <b>*Aprovado*</b> estão prontos para
+              iniciar fabricação.
             </p>
           ) : undefined
         }

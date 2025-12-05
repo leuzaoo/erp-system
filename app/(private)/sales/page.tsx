@@ -10,6 +10,8 @@ import {
 import Link from "next/link";
 
 import type { SalesTableRow } from "@/types/SalesTableRow";
+import type { SearchParams } from "@/types/SearchParams";
+import type { SortField } from "@/types/SortField";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import { requireRole } from "@/utils/auth/requireRole";
@@ -25,14 +27,6 @@ import {
 import { DataTable, type Column } from "@/app/components/Table";
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
-
-type SortField = "status" | "created_at";
-
-type SearchParams = {
-  q?: string;
-  sort?: SortField;
-  dir?: "asc" | "desc";
-};
 
 export default async function SalesPage({
   searchParams,

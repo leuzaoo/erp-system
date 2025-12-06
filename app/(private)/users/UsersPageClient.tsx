@@ -205,7 +205,7 @@ export default function UsersPageClient({ users }: Props) {
         return (
           <span
             className={[
-              "hover:bg-pattern-100 inline-flex cursor-pointer items-center gap-1 rounded-full rounded-md px-1 px-2 py-0.5 text-xs font-medium",
+              "hover:bg-pattern-100 inline-flex cursor-pointer items-center gap-1 rounded-full px-1 py-0.5 text-xs font-medium",
               isActive
                 ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
                 : "border border-neutral-300 bg-neutral-100 text-neutral-600",

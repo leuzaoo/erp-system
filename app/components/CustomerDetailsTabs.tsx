@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  ArrowDown01Icon,
+  ArrowDown10Icon,
+  ArrowDownUpIcon,
+} from "lucide-react";
 import * as React from "react";
 import Link from "next/link";
 
@@ -30,6 +35,52 @@ const inactiveClass = "text-neutral-500  hover:text-neutral-700 cursor-pointer";
 
 export default function CustomerDetailsTabs({ customer, orders }: Props) {
   const [activeTab, setActiveTab] = React.useState<TabKey>("info");
+  const [sortField, setSortField] = React.useState<
+    "created_at" | "total_price"
+  >("created_at");
+  const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
+
+  const handleSort = (field: "created_at" | "total_price") => {
+    setSortField(field);
+    setSortDir((prev) => {
+      if (field !== sortField) return "asc";
+      return prev === "asc" ? "desc" : "asc";
+    });
+  };
+
+  const renderSortIcon = (
+    field: "created_at" | "total_price",
+    ascIcon: React.ReactNode,
+    descIcon: React.ReactNode,
+  ) => {
+    if (sortField !== field) {
+      return <ArrowDownUpIcon size={16} />;
+    }
+    return sortDir === "asc" ? ascIcon : descIcon;
+  };
+
+  const sortedOrders = React.useMemo(() => {
+    const factor = sortDir === "asc" ? 1 : -1;
+    const list = [...orders];
+
+    list.sort((a, b) => {
+      if (sortField === "created_at") {
+        const da = new Date(a.created_at).getTime();
+        const db = new Date(b.created_at).getTime();
+        return (da - db) * factor;
+      }
+
+      if (sortField === "total_price") {
+        const ta = Number(a.total_price ?? 0);
+        const tb = Number(b.total_price ?? 0);
+        return (ta - tb) * factor;
+      }
+
+      return 0;
+    });
+
+    return list;
+  }, [orders, sortDir, sortField]);
 
   const ordersColumns: Column<SalesTableRow>[] = [
     {
@@ -69,7 +120,22 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
       },
     },
     {
-      header: "Valor",
+      header: (
+        <button
+          type="button"
+          onClick={() => handleSort("total_price")}
+          className="hover:bg-pattern-100 ml-auto flex cursor-pointer items-center gap-1 rounded-md px-1"
+        >
+          <span>Valor</span>
+          <span>
+            {renderSortIcon(
+              "total_price",
+              <ArrowDown01Icon size={16} />,
+              <ArrowDown10Icon size={16} />,
+            )}
+          </span>
+        </button>
+      ),
       accessorKey: "total_price",
       align: "right",
       width: 140,
@@ -80,7 +146,22 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
       ),
     },
     {
-      header: "Criado em",
+      header: (
+        <button
+          type="button"
+          onClick={() => handleSort("created_at")}
+          className="hover:bg-pattern-100 ml-auto flex cursor-pointer items-center gap-1 rounded-md px-1"
+        >
+          <span>Criado em</span>
+          <span>
+            {renderSortIcon(
+              "created_at",
+              <ArrowDown01Icon size={16} />,
+              <ArrowDown10Icon size={16} />,
+            )}
+          </span>
+        </button>
+      ),
       accessorKey: "created_at",
       align: "right",
       width: 190,
@@ -212,7 +293,7 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
 
           <DataTable<SalesTableRow>
             columns={ordersColumns}
-            data={orders}
+            data={sortedOrders}
             rowKey={(r) => r.id}
             emptyMessage="Nenhum pedido encontrado para este cliente."
             zebra

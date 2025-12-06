@@ -1,6 +1,12 @@
 export const dynamic = "force-dynamic";
 
-import { PlusIcon, SearchIcon } from "lucide-react";
+import {
+  ArrowDownAZIcon,
+  ArrowDownUpIcon,
+  ArrowDownZAIcon,
+  PlusIcon,
+  SearchIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 import { ProductHandleActions } from "@/app/actions/product-handle-actions";
@@ -25,17 +31,27 @@ type Product = {
   created_at: string;
 };
 
-type SearchParams = {
+type ProductSortField = "name" | "active";
+
+type ProductsSearchParams = {
   q?: string;
+  sort?: ProductSortField;
+  dir?: "asc" | "desc";
 };
 
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<SearchParams>;
+  searchParams: Promise<ProductsSearchParams>;
 }) {
-  const { q: qParam = "" } = await searchParams;
+  const { q: qParam = "", sort: sortParam, dir: dirParam } = await searchParams;
   const rawQ = qParam.trim();
+
+  const sortField: ProductSortField | undefined =
+    sortParam === "name" || sortParam === "active" ? sortParam : undefined;
+
+  const sortDir: "asc" | "desc" =
+    dirParam === "desc" || dirParam === "asc" ? dirParam : "asc";
 
   await requireRole(["admin"]);
 
@@ -89,9 +105,63 @@ export default async function ProductsPage({
     });
   }
 
+  if (sortField === "name") {
+    filtered = [...filtered].sort((a, b) => {
+      const na = normalize(a.name);
+      const nb = normalize(b.name);
+      const base = na.localeCompare(nb, "pt-BR", {
+        numeric: true,
+        sensitivity: "base",
+      });
+      return sortDir === "asc" ? base : -base;
+    });
+  } else if (sortField === "active") {
+    filtered = [...filtered].sort((a, b) => {
+      const av = a.active ? 1 : 0;
+      const bv = b.active ? 1 : 0;
+      const base = av - bv;
+      return sortDir === "asc" ? base : -base;
+    });
+  }
+
+  const buildSortHref = (field: ProductSortField) => {
+    const isCurrent = sortField === field;
+    const nextDir: "asc" | "desc" = !isCurrent
+      ? "asc"
+      : sortDir === "asc"
+        ? "desc"
+        : "asc";
+
+    const params = new URLSearchParams();
+    if (rawQ) params.set("q", rawQ);
+    params.set("sort", field);
+    params.set("dir", nextDir);
+
+    return `/products?${params.toString()}`;
+  };
+
+  const isNameSorted = sortField === "name";
+  const isActiveSorted = sortField === "active";
+
   const columns: Column<Product>[] = [
     {
-      header: "Nome",
+      header: (
+        <Link
+          href={buildSortHref("name")}
+          className="hover:bg-pattern-100 flex max-w-max items-center gap-1 rounded-md px-2"
+        >
+          <span className="flex items-center gap-1">
+            <span>Nome</span>
+            {!isNameSorted ? (
+              <ArrowDownUpIcon size={16} />
+            ) : sortDir === "asc" ? (
+              <ArrowDownAZIcon size={16} />
+            ) : (
+              <ArrowDownZAIcon size={16} />
+            )}
+          </span>
+        </Link>
+      ),
       accessorKey: "name",
     },
     {
@@ -123,7 +193,23 @@ export default async function ProductsPage({
       ),
     },
     {
-      header: "Status",
+      header: (
+        <Link
+          href={buildSortHref("active")}
+          className="hover:bg-pattern-100 flex max-w-max items-center gap-1 rounded-md px-2"
+        >
+          <span className="flex items-center gap-1">
+            <span>Status</span>
+            {!isActiveSorted ? (
+              <ArrowDownUpIcon size={16} />
+            ) : sortDir === "asc" ? (
+              <ArrowDownZAIcon size={16} />
+            ) : (
+              <ArrowDownAZIcon size={16} />
+            )}
+          </span>
+        </Link>
+      ),
       accessorKey: "active",
       cell: (value) => {
         const isActive = Boolean(value);

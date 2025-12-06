@@ -1,7 +1,13 @@
 "use client";
 
-import { PlusIcon, SearchIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import {
+  ArrowDownAZIcon,
+  ArrowDownUpIcon,
+  ArrowDownZAIcon,
+  PlusIcon,
+  SearchIcon,
+} from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import Link from "next/link";
 
@@ -22,8 +28,22 @@ type Props = {
 
 export default function UsersPageClient({ users }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [showNewUser, setShowNewUser] = React.useState(false);
-  const [query, setQuery] = React.useState("");
+  const [query, setQuery] = React.useState(searchParams.get("q") ?? "");
+
+  type UserSortField = "name" | "user_status" | "role";
+
+  const sortParam = searchParams.get("sort");
+  const dirParam = searchParams.get("dir");
+
+  const sortField: UserSortField =
+    sortParam === "name" || sortParam === "user_status" || sortParam === "role"
+      ? sortParam
+      : "name";
+  const sortDir: "asc" | "desc" =
+    dirParam === "desc" || dirParam === "asc" ? dirParam : "asc";
 
   const toggleNewUser = () => setShowNewUser((v) => !v);
 
@@ -33,25 +53,87 @@ export default function UsersPageClient({ users }: Props) {
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase();
 
+  const handleSort = (field: UserSortField) => {
+    const isCurrent = sortField === field;
+    const nextDir: "asc" | "desc" = !isCurrent
+      ? "asc"
+      : sortDir === "asc"
+        ? "desc"
+        : "asc";
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("sort", field);
+    params.set("dir", nextDir);
+
+    const trimmedQuery = query.trim();
+    if (trimmedQuery) {
+      params.set("q", trimmedQuery);
+    } else {
+      params.delete("q");
+    }
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const renderSortIcon = (
+    field: UserSortField,
+    ascIcon: React.ReactNode,
+    descIcon: React.ReactNode,
+  ) => {
+    if (sortField !== field) {
+      return <ArrowDownUpIcon size={16} />;
+    }
+    return sortDir === "asc" ? ascIcon : descIcon;
+  };
+
   const filteredUsers = React.useMemo(() => {
     const term = query.trim();
-    if (!term) return users;
+    let list = [...users];
 
-    const q = normalize(term);
+    if (term) {
+      const q = normalize(term);
 
-    return users.filter((u) => {
-      const name = normalize(u.name);
-      const email = normalize(u.email);
-      const role = normalize(u.role);
+      list = list.filter((u) => {
+        const name = normalize(u.name);
+        const email = normalize(u.email);
+        const role = normalize(u.role);
 
-      return (
-        name.includes(q) ||
-        email.includes(q) ||
-        role.includes(q) ||
-        u.id.slice(0, 5).toLowerCase().includes(q)
-      );
+        return (
+          name.includes(q) ||
+          email.includes(q) ||
+          role.includes(q) ||
+          u.id.slice(0, 5).toLowerCase().includes(q)
+        );
+      });
+    }
+
+    const factor = sortDir === "asc" ? 1 : -1;
+
+    list.sort((a, b) => {
+      if (sortField === "name") {
+        return (
+          a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }) *
+          factor
+        );
+      }
+
+      if (sortField === "user_status") {
+        const sa = normalize(String(a.user_status ?? ""));
+        const sb = normalize(String(b.user_status ?? ""));
+        return sa.localeCompare(sb, "pt-BR", { sensitivity: "base" }) * factor;
+      }
+
+      if (sortField === "role") {
+        const ra = normalize(String(a.role ?? ""));
+        const rb = normalize(String(b.role ?? ""));
+        return ra.localeCompare(rb, "pt-BR", { sensitivity: "base" }) * factor;
+      }
+
+      return 0;
     });
-  }, [users, query]);
+
+    return list;
+  }, [users, query, sortField, sortDir]);
 
   const roleLabel: Record<UserRow["role"], string> = {
     admin: "Admin",
@@ -61,7 +143,22 @@ export default function UsersPageClient({ users }: Props) {
 
   const columns: Column<UserRow>[] = [
     {
-      header: "Nome completo",
+      header: (
+        <button
+          type="button"
+          onClick={() => handleSort("name")}
+          className="hover:bg-pattern-100 flex cursor-pointer items-center gap-1 rounded-md px-1"
+        >
+          <span>Nome completo</span>
+          <span>
+            {renderSortIcon(
+              "name",
+              <ArrowDownAZIcon size={16} />,
+              <ArrowDownZAIcon size={16} />,
+            )}
+          </span>
+        </button>
+      ),
       accessorKey: "name",
       cell: (value, row) => (
         <div className="flex flex-col">
@@ -83,7 +180,22 @@ export default function UsersPageClient({ users }: Props) {
       width: 260,
     },
     {
-      header: "Status",
+      header: (
+        <button
+          type="button"
+          onClick={() => handleSort("user_status")}
+          className="hover:bg-pattern-100 flex cursor-pointer items-center gap-1 rounded-md px-1"
+        >
+          <span>Status</span>
+          <span>
+            {renderSortIcon(
+              "user_status",
+              <ArrowDownAZIcon size={16} />,
+              <ArrowDownZAIcon size={16} />,
+            )}
+          </span>
+        </button>
+      ),
       accessorKey: "user_status",
       width: 140,
       cell: (value) => {
@@ -93,7 +205,7 @@ export default function UsersPageClient({ users }: Props) {
         return (
           <span
             className={[
-              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+              "hover:bg-pattern-100 inline-flex cursor-pointer items-center gap-1 rounded-full px-1 py-0.5 text-xs font-medium",
               isActive
                 ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
                 : "border border-neutral-300 bg-neutral-100 text-neutral-600",
@@ -111,7 +223,22 @@ export default function UsersPageClient({ users }: Props) {
       },
     },
     {
-      header: "Função",
+      header: (
+        <button
+          type="button"
+          onClick={() => handleSort("role")}
+          className="hover:bg-pattern-100 flex cursor-pointer items-center gap-1 rounded-md px-1"
+        >
+          <span>Função</span>
+          <span>
+            {renderSortIcon(
+              "role",
+              <ArrowDownAZIcon size={16} />,
+              <ArrowDownZAIcon size={16} />,
+            )}
+          </span>
+        </button>
+      ),
       accessorKey: "role",
       width: 160,
       cell: (value) => {

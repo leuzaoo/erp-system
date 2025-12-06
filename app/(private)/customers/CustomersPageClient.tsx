@@ -1,7 +1,16 @@
 "use client";
 
-import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import {
+  ArrowDown01Icon,
+  ArrowDown10Icon,
+  ArrowDownAZIcon,
+  ArrowDownUpIcon,
+  ArrowDownZAIcon,
+  PlusIcon,
+  SearchIcon,
+  XIcon,
+} from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import Link from "next/link";
 import moment from "moment";
@@ -13,6 +22,8 @@ import { DataTable, type Column } from "@/app/components/Table";
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
 import Card from "@/app/components/Card";
+
+type CustomerSortField = "name" | "state" | "created_at";
 
 type Props = {
   customers: CustomersTableRow[];
@@ -26,9 +37,21 @@ export default function CustomersPageClient({
   rawQ,
 }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [showNewCustomer, setShowNewCustomer] = React.useState(false);
 
   const [query, setQuery] = React.useState(rawQ ?? "");
+
+  const sortParam = searchParams.get("sort");
+  const dirParam = searchParams.get("dir");
+
+  const sortField: CustomerSortField =
+    sortParam === "name" || sortParam === "state" || sortParam === "created_at"
+      ? sortParam
+      : "name";
+  const sortDir: "asc" | "desc" =
+    dirParam === "desc" || dirParam === "asc" ? dirParam : "asc";
 
   const toggleNewCustomer = () => setShowNewCustomer((v) => !v);
 
@@ -38,29 +61,104 @@ export default function CustomersPageClient({
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase();
 
+  const handleSort = (field: CustomerSortField) => {
+    const isCurrent = sortField === field;
+    const nextDir: "asc" | "desc" = !isCurrent
+      ? "asc"
+      : sortDir === "asc"
+        ? "desc"
+        : "asc";
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("sort", field);
+    params.set("dir", nextDir);
+
+    const trimmedQuery = query.trim();
+    if (trimmedQuery) {
+      params.set("q", trimmedQuery);
+    } else {
+      params.delete("q");
+    }
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const renderSortIcon = (
+    field: CustomerSortField,
+    ascIcon: React.ReactNode,
+    descIcon: React.ReactNode,
+  ) => {
+    if (sortField !== field) {
+      return <ArrowDownUpIcon size={16} />;
+    }
+    return sortDir === "asc" ? ascIcon : descIcon;
+  };
+
   const filteredCustomers = React.useMemo(() => {
     const term = query.trim();
-    const sorted = [...customers].sort((a, b) =>
-      a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }),
-    );
+    let list = [...customers];
 
-    if (!term) return sorted;
+    if (term) {
+      const q = normalize(term);
 
-    const q = normalize(term);
+      list = list.filter((c) => {
+        const customerName = normalize(c.name);
+        const customerDocument = normalize(String(c.document ?? ""));
 
-    return sorted.filter((c) => {
-      const customerName = normalize(c.name);
-      const customerDocument = normalize(c.document);
+        return customerName.includes(q) || customerDocument.includes(q);
+      });
+    }
 
-      return customerName.includes(q) || customerDocument.includes(q);
+    const factor = sortDir === "asc" ? 1 : -1;
+
+    list.sort((a, b) => {
+      if (sortField === "name") {
+        return (
+          a.name.localeCompare(b.name, "pt-BR", {
+            sensitivity: "base",
+          }) * factor
+        );
+      }
+
+      if (sortField === "state") {
+        const sa = normalize(String(a.state ?? ""));
+        const sb = normalize(String(b.state ?? ""));
+        return sa.localeCompare(sb, "pt-BR", { sensitivity: "base" }) * factor;
+      }
+
+      if (sortField === "created_at") {
+        const da = new Date(a.created_at).getTime();
+        const db = new Date(b.created_at).getTime();
+        return (da - db) * factor;
+      }
+
+      return 0;
     });
-  }, [customers, query]);
+
+    return list;
+  }, [customers, query, sortField, sortDir]);
 
   const columns: Column<CustomersTableRow>[] = [
     {
-      header: "Nome",
+      header: (
+        <button
+          type="button"
+          onClick={() => handleSort("name")}
+          className="hover:bg-pattern-100 flex cursor-pointer items-center gap-1 rounded-md px-2"
+        >
+          <span>Nome</span>
+          <span>
+            {renderSortIcon(
+              "name",
+              <ArrowDownAZIcon size={16} />,
+              <ArrowDownZAIcon size={16} />,
+            )}
+          </span>
+        </button>
+      ),
       accessorKey: "name",
       width: 600,
+      headerClassName: "select-none",
       cell: (value, row) => (
         <Link
           href={`/customers/${row.id}`}
@@ -84,17 +182,49 @@ export default function CustomersPageClient({
       cell: (value) => (value ?? "-") as string,
     },
     {
-      header: "Estado",
+      header: (
+        <button
+          type="button"
+          onClick={() => handleSort("state")}
+          className="hover:bg-pattern-100 flex cursor-pointer items-center gap-1 rounded-md px-2"
+        >
+          <span>Estado</span>
+          <span>
+            {renderSortIcon(
+              "state",
+              <ArrowDownAZIcon size={16} />,
+              <ArrowDownZAIcon size={16} />,
+            )}
+          </span>
+        </button>
+      ),
       accessorKey: "state",
       align: "left",
       width: 200,
+      headerClassName: "select-none",
       cell: (value) => (value ?? "-") as string,
     },
     {
-      header: "Cadastrado em",
+      header: (
+        <button
+          type="button"
+          onClick={() => handleSort("created_at")}
+          className="hover:bg-pattern-100 ml-auto flex cursor-pointer items-center gap-1 rounded-md px-2"
+        >
+          <span>Cadastrado em</span>
+          <span>
+            {renderSortIcon(
+              "created_at",
+              <ArrowDown01Icon size={16} />,
+              <ArrowDown10Icon size={16} />,
+            )}
+          </span>
+        </button>
+      ),
       accessorKey: "created_at",
       align: "right",
       width: 200,
+      headerClassName: "select-none",
       cell: (value) => moment(String(value)).format("DD/MM/YYYY"),
     },
   ];

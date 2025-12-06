@@ -10,7 +10,7 @@ import {
   SearchIcon,
   XIcon,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import Link from "next/link";
 import moment from "moment";
@@ -23,13 +23,13 @@ import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
 import Card from "@/app/components/Card";
 
+type CustomerSortField = "name" | "state" | "created_at";
+
 type Props = {
   customers: CustomersTableRow[];
   totalCount: number;
   rawQ: string;
 };
-
-type SortField = "name" | "state" | "created_at";
 
 export default function CustomersPageClient({
   customers,
@@ -37,11 +37,21 @@ export default function CustomersPageClient({
   rawQ,
 }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [showNewCustomer, setShowNewCustomer] = React.useState(false);
 
   const [query, setQuery] = React.useState(rawQ ?? "");
-  const [sortField, setSortField] = React.useState<SortField>("name");
-  const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
+
+  const sortParam = searchParams.get("sort");
+  const dirParam = searchParams.get("dir");
+
+  const sortField: CustomerSortField =
+    sortParam === "name" || sortParam === "state" || sortParam === "created_at"
+      ? sortParam
+      : "name";
+  const sortDir: "asc" | "desc" =
+    dirParam === "desc" || dirParam === "asc" ? dirParam : "asc";
 
   const toggleNewCustomer = () => setShowNewCustomer((v) => !v);
 
@@ -51,19 +61,30 @@ export default function CustomersPageClient({
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase();
 
-  const handleSort = (field: SortField) => {
-    setSortField((currentField) => {
-      if (currentField !== field) {
-        setSortDir("asc");
-        return field;
-      }
-      setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
-      return field;
-    });
+  const handleSort = (field: CustomerSortField) => {
+    const isCurrent = sortField === field;
+    const nextDir: "asc" | "desc" = !isCurrent
+      ? "asc"
+      : sortDir === "asc"
+        ? "desc"
+        : "asc";
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("sort", field);
+    params.set("dir", nextDir);
+
+    const trimmedQuery = query.trim();
+    if (trimmedQuery) {
+      params.set("q", trimmedQuery);
+    } else {
+      params.delete("q");
+    }
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const renderSortIcon = (
-    field: SortField,
+    field: CustomerSortField,
     ascIcon: React.ReactNode,
     descIcon: React.ReactNode,
   ) => {
@@ -105,10 +126,13 @@ export default function CustomersPageClient({
         return sa.localeCompare(sb, "pt-BR", { sensitivity: "base" }) * factor;
       }
 
-      // created_at
-      const da = new Date(a.created_at).getTime();
-      const db = new Date(b.created_at).getTime();
-      return (da - db) * factor;
+      if (sortField === "created_at") {
+        const da = new Date(a.created_at).getTime();
+        const db = new Date(b.created_at).getTime();
+        return (da - db) * factor;
+      }
+
+      return 0;
     });
 
     return list;
@@ -120,10 +144,10 @@ export default function CustomersPageClient({
         <button
           type="button"
           onClick={() => handleSort("name")}
-          className="flex items-center gap-1"
+          className="hover:bg-pattern-100 flex cursor-pointer items-center gap-1 rounded-md px-2"
         >
           <span>Nome</span>
-          <span className="text-neutral-500">
+          <span>
             {renderSortIcon(
               "name",
               <ArrowDownAZIcon size={16} />,
@@ -162,10 +186,10 @@ export default function CustomersPageClient({
         <button
           type="button"
           onClick={() => handleSort("state")}
-          className="flex items-center gap-1"
+          className="hover:bg-pattern-100 flex cursor-pointer items-center gap-1 rounded-md px-2"
         >
           <span>Estado</span>
-          <span className="text-neutral-500">
+          <span>
             {renderSortIcon(
               "state",
               <ArrowDownAZIcon size={16} />,
@@ -185,7 +209,7 @@ export default function CustomersPageClient({
         <button
           type="button"
           onClick={() => handleSort("created_at")}
-          className="ml-auto flex items-center gap-1"
+          className="hover:bg-pattern-100 ml-auto flex cursor-pointer items-center gap-1 rounded-md px-2"
         >
           <span>Cadastrado em</span>
           <span>

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import type { CustomersTableRow } from "@/types/CustomersTableRow";
 import type { SalesTableRow } from "@/types/SalesTableRow";
@@ -22,6 +23,7 @@ import {
 import { DataTable, type Column } from "@/app/components/Table";
 import Button from "@/app/components/Button";
 import Card from "@/app/components/Card";
+import TablePagination from "@/app/components/TablePagination";
 
 type Props = {
   customer: CustomersTableRow;
@@ -33,19 +35,58 @@ type TabKey = "info" | "orders";
 const activeClass = "border-b-2 border-blue-500 text-blue-500 font-medium";
 const inactiveClass = "text-neutral-500  hover:text-neutral-700 cursor-pointer";
 
+const PER_PAGE = 15;
+
 export default function CustomerDetailsTabs({ customer, orders }: Props) {
-  const [activeTab, setActiveTab] = React.useState<TabKey>("info");
-  const [sortField, setSortField] = React.useState<
-    "created_at" | "total_price"
-  >("created_at");
-  const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const tabParam = searchParams.get("tab");
+  const initialTab: TabKey = tabParam === "orders" ? "orders" : "info";
+  const [activeTab, setActiveTab] = React.useState<TabKey>(initialTab);
+
+  React.useEffect(() => {
+    setActiveTab(searchParams.get("tab") === "orders" ? "orders" : "info");
+  }, [searchParams]);
+
+  const sortParam = searchParams.get("sort");
+  const dirParam = searchParams.get("dir");
+  const pageParam = searchParams.get("page");
+
+  const sortField: "created_at" | "total_price" =
+    sortParam === "total_price" ? "total_price" : "created_at";
+  const sortDir: "asc" | "desc" =
+    dirParam === "desc" || dirParam === "asc" ? dirParam : "asc";
+
+  const handleTabChange = (tab: TabKey) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    params.delete("page");
+    params.delete("sort");
+    params.delete("dir");
+
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
 
   const handleSort = (field: "created_at" | "total_price") => {
-    setSortField(field);
-    setSortDir((prev) => {
-      if (field !== sortField) return "asc";
-      return prev === "asc" ? "desc" : "asc";
-    });
+    const isCurrent = sortField === field;
+    const nextDir: "asc" | "desc" = !isCurrent
+      ? "asc"
+      : sortDir === "asc"
+        ? "desc"
+        : "asc";
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", "orders");
+    params.set("sort", field);
+    params.set("dir", nextDir);
+    params.delete("page");
+
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
 
   const renderSortIcon = (
@@ -81,6 +122,13 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
 
     return list;
   }, [orders, sortDir, sortField]);
+
+  const totalItems = sortedOrders.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PER_PAGE));
+  const currentPage = Math.max(1, Number(pageParam) || 1);
+  const safePage = Math.min(currentPage, totalPages);
+  const start = (safePage - 1) * PER_PAGE;
+  const pageOrders = sortedOrders.slice(start, start + PER_PAGE);
 
   const ordersColumns: Column<SalesTableRow>[] = [
     {
@@ -174,7 +222,7 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
       <div className="border-pattern-200 flex gap-2 border-b text-sm">
         <button
           type="button"
-          onClick={() => setActiveTab("info")}
+          onClick={() => handleTabChange("info")}
           className={[
             "px-4 py-2",
             activeTab === "info" ? activeClass : inactiveClass,
@@ -185,7 +233,7 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
 
         <button
           type="button"
-          onClick={() => setActiveTab("orders")}
+          onClick={() => handleTabChange("orders")}
           className={[
             "px-4 py-2",
             activeTab === "orders" ? activeClass : inactiveClass,
@@ -293,11 +341,23 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
 
           <DataTable<SalesTableRow>
             columns={ordersColumns}
-            data={sortedOrders}
+            data={pageOrders}
             rowKey={(r) => r.id}
             emptyMessage="Nenhum pedido encontrado para este cliente."
             zebra
             stickyHeader
+          />
+
+          <TablePagination
+            totalItems={totalItems}
+            perPage={PER_PAGE}
+            currentPage={safePage}
+            basePath={pathname}
+            searchParams={{
+              tab: "orders",
+              sort: sortField,
+              dir: sortDir,
+            }}
           />
         </div>
       )}

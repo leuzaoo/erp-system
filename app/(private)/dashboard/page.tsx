@@ -7,9 +7,9 @@ import {
   ArrowDownZAIcon,
 } from "lucide-react";
 
-import type { OrderRow } from "@/types/OrderRow";
 import type { SearchParams } from "@/types/SearchParams";
 import type { SortField } from "@/types/SortField";
+import type { OrderRow } from "@/types/OrderRow";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import { requireAuth } from "@/utils/auth/requireAuth";
@@ -22,6 +22,7 @@ import {
 } from "@/utils/orderStatus";
 
 import { DataTable, type Column } from "@/app/components/Table";
+import TablePagination from "@/app/components/TablePagination";
 import Card from "@/app/components/Card";
 
 function sumOrdersTotal(orders: { total_price: number }[] = []) {
@@ -36,12 +37,18 @@ function countOrdersReadyToProduce(orders: { status: string }[] = []) {
   return orders.filter((order) => order.status === "APROVADO").length;
 }
 
+const PER_PAGE = 15;
+
 export default async function DashboardPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { sort: sortParam, dir: dirParam } = await searchParams;
+  const {
+    sort: sortParam,
+    dir: dirParam,
+    page: pageParam,
+  } = await searchParams;
 
   const sortField: SortField | undefined =
     sortParam === "status" || sortParam === "created_at"
@@ -50,6 +57,10 @@ export default async function DashboardPage({
 
   const sortDir: "asc" | "desc" =
     dirParam === "desc" || dirParam === "asc" ? dirParam : "asc";
+
+  const currentPage = Math.max(1, Number(pageParam) || 1);
+  const from = (currentPage - 1) * PER_PAGE;
+  const to = from + PER_PAGE - 1;
 
   const user = await requireAuth();
   const supabase = await supabaseRSC();
@@ -70,68 +81,34 @@ export default async function DashboardPage({
 
   const userRole = profile.role as "admin" | "vendedor" | "fabrica";
 
+  const orderColumn: SortField = sortField ?? "created_at";
+  const ascending = sortField === undefined ? false : sortDir === "asc";
+
   let ordersQuery = supabase
     .from("orders")
     .select(
       "id, number, customer_name_snapshot, seller_name_snapshot, created_at, status, total_price, customer_id, seller_id",
-    )
-    .order("created_at", { ascending: false })
-    .limit(10);
+      { count: "exact" },
+    );
 
   if (userRole === "fabrica") {
     ordersQuery = ordersQuery.eq("status", "APROVADO");
   }
 
-  const { data: orders, error } = await ordersQuery;
+  ordersQuery = ordersQuery.order(orderColumn, { ascending }).range(from, to);
+
+  const { data: orders, error, count } = await ordersQuery;
 
   if (error) {
     return <pre className="text-red-600">Erro: {error.message}</pre>;
   }
 
-  const baseOrders = orders ?? [];
+  const totalItems = count ?? 0;
+  const pageOrders = orders ?? [];
 
-  let sortedOrders = baseOrders;
-
-  if (sortField === "status") {
-    sortedOrders = [...baseOrders].sort((a, b) => {
-      const sa = String(a.status ?? "");
-      const sb = String(b.status ?? "");
-      const base = sa.localeCompare(sb, "pt-BR", {
-        numeric: true,
-        sensitivity: "base",
-      });
-      return sortDir === "asc" ? base : -base;
-    });
-  } else if (sortField === "created_at") {
-    sortedOrders = [...baseOrders].sort((a, b) => {
-      const da = new Date(a.created_at).getTime();
-      const db = new Date(b.created_at).getTime();
-      const base = da - db;
-      return sortDir === "asc" ? base : -base;
-    });
-  }
-
-  const buildSortHref = (field: SortField) => {
-    const isCurrent = sortField === field;
-    const nextDir: "asc" | "desc" = !isCurrent
-      ? "asc"
-      : sortDir === "asc"
-        ? "desc"
-        : "asc";
-
-    const params = new URLSearchParams();
-    params.set("sort", field);
-    params.set("dir", nextDir);
-
-    return `/dashboard?${params.toString()}`;
-  };
-
-  const isStatusSorted = sortField === "status";
-  const isCreatedSorted = sortField === "created_at";
-
-  const totalOrdersPrice = sumOrdersTotal(sortedOrders);
-  const ordersInProduction = countOrdersInProduction(sortedOrders);
-  const ordersReadyToProduce = countOrdersReadyToProduce(sortedOrders);
+  const totalOrdersPrice = sumOrdersTotal(pageOrders);
+  const ordersInProduction = countOrdersInProduction(pageOrders);
+  const ordersReadyToProduce = countOrdersReadyToProduce(pageOrders);
 
   let customersCount = 0;
 
@@ -150,7 +127,7 @@ export default async function DashboardPage({
 
     customersCount = customers?.length ?? 0;
   } else if (userRole === "vendedor") {
-    const { count, error: customersError } = await supabase
+    const { count: customersCountRes, error: customersError } = await supabase
       .from("orders")
       .select("customer_id", { count: "exact", head: true })
       .eq("seller_id", profile.id);
@@ -163,8 +140,27 @@ export default async function DashboardPage({
       );
     }
 
-    customersCount = count ?? 0;
+    customersCount = customersCountRes ?? 0;
   }
+
+  const buildSortHref = (field: SortField) => {
+    const isCurrent = sortField === field;
+    const nextDir: "asc" | "desc" = !isCurrent
+      ? "asc"
+      : sortDir === "asc"
+        ? "desc"
+        : "asc";
+
+    const params = new URLSearchParams();
+    params.set("sort", field);
+    params.set("dir", nextDir);
+
+    const qs = params.toString();
+    return qs ? `/dashboard?${qs}` : "/dashboard";
+  };
+
+  const isStatusSorted = sortField === "status";
+  const isCreatedSorted = sortField === "created_at";
 
   const columns: Column<OrderRow>[] = [
     {
@@ -247,18 +243,16 @@ export default async function DashboardPage({
 
       <div className="flex items-center gap-4 overflow-x-auto pb-4">
         {userRole === "fabrica" ? (
-          <>
-            <Card className="flex max-w-max min-w-max flex-col gap-1">
-              <span>Pronto para fabricar</span>
-              <span className="text-2xl font-bold">{ordersReadyToProduce}</span>
-            </Card>
-          </>
+          <Card className="flex max-w-max min-w-max flex-col gap-1">
+            <span>Pronto para fabricar</span>
+            <span className="text-2xl font-bold">{ordersReadyToProduce}</span>
+          </Card>
         ) : (
           <div className="flex items-center gap-4 overflow-x-auto">
             <Card className="flex flex-col">
               <span>Vendas</span>
               <span className="text-2xl font-bold">
-                {sortedOrders.length ?? 0}
+                {pageOrders.length ?? 0}
               </span>
             </Card>
             <Card className="flex flex-col">
@@ -279,17 +273,30 @@ export default async function DashboardPage({
         )}
       </div>
 
-      {!sortedOrders.length && (
+      {!pageOrders.length && (
         <p className="text-pattern-800">Nenhum pedido encontrado.</p>
       )}
 
-      {!!sortedOrders.length && (
-        <DataTable<OrderRow>
-          data={sortedOrders}
-          rowKey={(row) => row.id}
-          emptyMessage="Nenhum pedido encontrado."
-          columns={columns}
-        />
+      {!!pageOrders.length && (
+        <>
+          <DataTable<OrderRow>
+            data={pageOrders}
+            rowKey={(row) => row.id}
+            emptyMessage="Nenhum pedido encontrado."
+            columns={columns}
+          />
+
+          <TablePagination
+            totalItems={totalItems}
+            perPage={PER_PAGE}
+            currentPage={currentPage}
+            basePath="/dashboard"
+            searchParams={{
+              sort: sortField,
+              dir: sortField ? sortDir : undefined,
+            }}
+          />
+        </>
       )}
     </div>
   );

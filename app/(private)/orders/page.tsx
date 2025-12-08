@@ -22,15 +22,23 @@ import {
 } from "@/utils/orderStatus";
 
 import { DataTable, type Column } from "@/app/components/Table";
+import TablePagination from "@/app/components/TablePagination";
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
+
+const PER_PAGE = 15;
 
 export default async function OrdersPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { q: qParam = "", sort: sortParam, dir: dirParam } = await searchParams;
+  const {
+    q: qParam = "",
+    sort: sortParam,
+    dir: dirParam,
+    page: pageParam,
+  } = await searchParams;
   const rawQ = qParam.trim();
 
   const sortField: SortField | undefined =
@@ -109,6 +117,13 @@ export default async function OrdersPage({
       return sortDir === "asc" ? base : -base;
     });
   }
+
+  const totalItems = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PER_PAGE));
+  const currentPage = Math.max(1, Number(pageParam) || 1);
+  const safePage = Math.min(currentPage, totalPages);
+  const start = (safePage - 1) * PER_PAGE;
+  const pageOrders = filtered.slice(start, start + PER_PAGE);
 
   const buildSortHref = (field: SortField) => {
     const isCurrent = sortField === field;
@@ -232,7 +247,7 @@ export default async function OrdersPage({
 
       <DataTable<SalesTableRow>
         columns={columns}
-        data={filtered}
+        data={pageOrders}
         rowKey={(r) => r.id}
         caption={
           rawQ ? (
@@ -249,6 +264,18 @@ export default async function OrdersPage({
         emptyMessage="Nenhum pedido encontrado."
         zebra
         stickyHeader
+      />
+
+      <TablePagination
+        totalItems={totalItems}
+        perPage={PER_PAGE}
+        currentPage={safePage}
+        basePath="/orders"
+        searchParams={{
+          q: rawQ || undefined,
+          sort: sortField,
+          dir: sortField ? sortDir : undefined,
+        }}
       />
     </div>
   );

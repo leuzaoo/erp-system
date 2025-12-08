@@ -19,6 +19,7 @@ import type { CustomersTableRow } from "@/types/CustomersTableRow";
 
 import NewCustomerForm from "@/app/components/forms/NewCustomerForm";
 import { DataTable, type Column } from "@/app/components/Table";
+import TablePagination from "@/app/components/TablePagination";
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
 import Card from "@/app/components/Card";
@@ -30,6 +31,8 @@ type Props = {
   totalCount: number;
   rawQ: string;
 };
+
+const PER_PAGE = 15;
 
 export default function CustomersPageClient({
   customers,
@@ -45,6 +48,7 @@ export default function CustomersPageClient({
 
   const sortParam = searchParams.get("sort");
   const dirParam = searchParams.get("dir");
+  const pageParam = searchParams.get("page");
 
   const sortField: CustomerSortField =
     sortParam === "name" || sortParam === "state" || sortParam === "created_at"
@@ -54,6 +58,11 @@ export default function CustomersPageClient({
     dirParam === "desc" || dirParam === "asc" ? dirParam : "asc";
 
   const toggleNewCustomer = () => setShowNewCustomer((v) => !v);
+
+  React.useEffect(() => {
+    const qFromUrl = searchParams.get("q") ?? "";
+    setQuery((prev) => (prev === qFromUrl ? prev : qFromUrl));
+  }, [searchParams]);
 
   const normalize = (value: string): string =>
     (value || "")
@@ -72,6 +81,7 @@ export default function CustomersPageClient({
     const params = new URLSearchParams(searchParams.toString());
     params.set("sort", field);
     params.set("dir", nextDir);
+    params.delete("page");
 
     const trimmedQuery = query.trim();
     if (trimmedQuery) {
@@ -137,6 +147,16 @@ export default function CustomersPageClient({
 
     return list;
   }, [customers, query, sortField, sortDir]);
+
+  const trimmedQuery = query.trim();
+  const totalItems = filteredCustomers.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PER_PAGE));
+  const currentPage = Math.max(1, Number(pageParam) || 1);
+  const safePage = Math.min(currentPage, totalPages);
+  const queryMatchesUrl = (searchParams.get("q") ?? "") === trimmedQuery;
+  const page = queryMatchesUrl ? safePage : 1;
+  const start = (page - 1) * PER_PAGE;
+  const pageCustomers = filteredCustomers.slice(start, start + PER_PAGE);
 
   const columns: Column<CustomersTableRow>[] = [
     {
@@ -315,7 +335,7 @@ export default function CustomersPageClient({
 
         <DataTable<CustomersTableRow>
           columns={columnsWithEdit}
-          data={filteredCustomers}
+          data={pageCustomers}
           rowKey={(r) => r.id}
           caption={
             query ? (
@@ -327,6 +347,18 @@ export default function CustomersPageClient({
           emptyMessage="Nenhum cliente encontrado."
           zebra
           stickyHeader
+        />
+
+        <TablePagination
+          totalItems={totalItems}
+          perPage={PER_PAGE}
+          currentPage={page}
+          basePath="/customers"
+          searchParams={{
+            q: trimmedQuery || undefined,
+            sort: sortParam ?? undefined,
+            dir: sortParam ? sortDir : undefined,
+          }}
         />
       </div>
 

@@ -4,4 +4,5 @@ export type SearchParams = {
   q?: string;
   sort?: SortField;
   dir?: "asc" | "desc";
+  page?: string;
 };

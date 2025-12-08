@@ -17,6 +17,7 @@ import { createdAt } from "@/utils/createdAt";
 import { shortId } from "@/utils/shortId";
 
 import { DataTable, type Column } from "@/app/components/Table";
+import TablePagination from "@/app/components/TablePagination";
 import NewUserForm from "@/app/components/forms/NewUserForm";
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
@@ -25,6 +26,8 @@ import Card from "@/app/components/Card";
 type Props = {
   users: UserRow[];
 };
+
+const PER_PAGE = 15;
 
 export default function UsersPageClient({ users }: Props) {
   const router = useRouter();
@@ -37,6 +40,7 @@ export default function UsersPageClient({ users }: Props) {
 
   const sortParam = searchParams.get("sort");
   const dirParam = searchParams.get("dir");
+  const pageParam = searchParams.get("page");
 
   const sortField: UserSortField =
     sortParam === "name" || sortParam === "user_status" || sortParam === "role"
@@ -46,6 +50,11 @@ export default function UsersPageClient({ users }: Props) {
     dirParam === "desc" || dirParam === "asc" ? dirParam : "asc";
 
   const toggleNewUser = () => setShowNewUser((v) => !v);
+
+  React.useEffect(() => {
+    const qFromUrl = searchParams.get("q") ?? "";
+    setQuery((prev) => (prev === qFromUrl ? prev : qFromUrl));
+  }, [searchParams]);
 
   const normalize = (value: string | null | undefined): string =>
     (value || "")
@@ -64,6 +73,7 @@ export default function UsersPageClient({ users }: Props) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("sort", field);
     params.set("dir", nextDir);
+    params.delete("page");
 
     const trimmedQuery = query.trim();
     if (trimmedQuery) {
@@ -134,6 +144,16 @@ export default function UsersPageClient({ users }: Props) {
 
     return list;
   }, [users, query, sortField, sortDir]);
+
+  const trimmedQuery = query.trim();
+  const totalItems = filteredUsers.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PER_PAGE));
+  const currentPage = Math.max(1, Number(pageParam) || 1);
+  const safePage = Math.min(currentPage, totalPages);
+  const queryMatchesUrl = (searchParams.get("q") ?? "") === trimmedQuery;
+  const page = queryMatchesUrl ? safePage : 1;
+  const start = (page - 1) * PER_PAGE;
+  const pageUsers = filteredUsers.slice(start, start + PER_PAGE);
 
   const roleLabel: Record<UserRow["role"], string> = {
     admin: "Admin",
@@ -317,7 +337,7 @@ export default function UsersPageClient({ users }: Props) {
 
         <DataTable<UserRow>
           columns={columns}
-          data={filteredUsers}
+          data={pageUsers}
           rowKey={(r) => r.id}
           caption={
             query ? (
@@ -329,6 +349,18 @@ export default function UsersPageClient({ users }: Props) {
           emptyMessage="Nenhum usuário encontrado."
           zebra
           stickyHeader
+        />
+
+        <TablePagination
+          totalItems={totalItems}
+          perPage={PER_PAGE}
+          currentPage={page}
+          basePath="/users"
+          searchParams={{
+            q: trimmedQuery || undefined,
+            sort: sortParam ?? undefined,
+            dir: sortParam ? sortDir : undefined,
+          }}
         />
       </div>
 

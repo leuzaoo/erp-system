@@ -16,6 +16,7 @@ import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 
 import { DataTable, type Column } from "@/app/components/Table";
+import TablePagination from "@/app/components/TablePagination";
 import KpiCard from "@/app/components/KpiCard";
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
@@ -37,14 +38,22 @@ type ProductsSearchParams = {
   q?: string;
   sort?: ProductSortField;
   dir?: "asc" | "desc";
+  page?: string;
 };
+
+const PER_PAGE = 15;
 
 export default async function ProductsPage({
   searchParams,
 }: {
   searchParams: Promise<ProductsSearchParams>;
 }) {
-  const { q: qParam = "", sort: sortParam, dir: dirParam } = await searchParams;
+  const {
+    q: qParam = "",
+    sort: sortParam,
+    dir: dirParam,
+    page: pageParam,
+  } = await searchParams;
   const rawQ = qParam.trim();
 
   const sortField: ProductSortField | undefined =
@@ -123,6 +132,13 @@ export default async function ProductsPage({
       return sortDir === "asc" ? base : -base;
     });
   }
+
+  const totalItems = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PER_PAGE));
+  const currentPage = Math.max(1, Number(pageParam) || 1);
+  const safePage = Math.min(currentPage, totalPages);
+  const start = (safePage - 1) * PER_PAGE;
+  const pageProducts = filtered.slice(start, start + PER_PAGE);
 
   const buildSortHref = (field: ProductSortField) => {
     const isCurrent = sortField === field;
@@ -275,7 +291,7 @@ export default async function ProductsPage({
 
       <DataTable<Product>
         columns={columns}
-        data={filtered}
+        data={pageProducts}
         rowKey={(p) => p.id}
         emptyMessage="Nenhum produto encontrado."
         zebra
@@ -287,6 +303,18 @@ export default async function ProductsPage({
             </>
           ) : undefined
         }
+      />
+
+      <TablePagination
+        totalItems={totalItems}
+        perPage={PER_PAGE}
+        currentPage={safePage}
+        basePath="/products"
+        searchParams={{
+          q: rawQ || undefined,
+          sort: sortField,
+          dir: sortField ? sortDir : undefined,
+        }}
       />
     </div>
   );

@@ -1,4 +1,3 @@
-// Enable usage inside client components
 "use client";
 
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";

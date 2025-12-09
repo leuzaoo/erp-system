@@ -146,9 +146,16 @@ export default async function OrderViewPage({
     <>
       <section className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl">
-            Pedido: <span className="font-bold">{shortId(order.id)}</span>
-          </h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl">
+              Pedido: <span className="font-bold">{shortId(order.id)}</span>
+            </h1>
+            <p
+              className={`mt-1 max-w-max rounded-full px-2 text-right text-xs font-semibold ${ORDER_STATUS_BADGE_CLASS[status]}`}
+            >
+              {ORDER_STATUS_LABELS[status] ?? status}
+            </p>
+          </div>
 
           <p className="mt-1 text-sm font-light opacity-70">
             Detalhes do pedido
@@ -156,11 +163,6 @@ export default async function OrderViewPage({
         </div>
 
         <div className="flex flex-col items-end gap-2">
-          <p
-            className={`max-w-max rounded-full px-3 py-1 text-right text-sm font-semibold ${ORDER_STATUS_BADGE_CLASS[status]}`}
-          >
-            {ORDER_STATUS_LABELS[status] ?? status}
-          </p>
           <Link
             className="flex items-center gap-2"
             href={`/orders/${order.id}/edit`}

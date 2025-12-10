@@ -9,6 +9,7 @@ import type { AppRole } from "@/utils/permissions";
 
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
+import { toast } from "sonner";
 
 type Props = {
   closeModal: () => void;
@@ -57,6 +58,7 @@ export default function NewUserForm({ closeModal, onSuccess }: Props) {
 
     onSuccess?.();
     closeModal();
+    toast.success("Usuário criado com sucesso.");
   }
 
   return (

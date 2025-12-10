@@ -1,5 +1,6 @@
-import * as React from "react";
 import { Loader2Icon, XIcon } from "lucide-react";
+import { toast } from "sonner";
+import * as React from "react";
 
 import { createCustomerAction } from "@/app/actions/customer-actions";
 
@@ -70,6 +71,7 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
 
     onCreated(res.customer);
     closeModal();
+    toast.success("Cliente cadastrado com sucesso.");
   };
 
   return (

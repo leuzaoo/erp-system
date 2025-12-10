@@ -1,8 +1,9 @@
 "use client";
 
-import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
+import * as React from "react";
+import { toast } from "sonner";
 
 import { updateCustomerAction } from "@/app/actions/customer-actions";
 import type { CustomersTableRow } from "@/types/CustomersTableRow";
@@ -63,6 +64,7 @@ export default function EditCustomerForm({
       return;
     }
 
+    toast.success("Cliente atualizado com sucesso!");
     router.push(`/customers/${customer.id}`);
   }
 

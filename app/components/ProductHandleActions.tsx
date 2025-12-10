@@ -4,8 +4,10 @@ import * as React from "react";
 import { EyeIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 
-import { deleteProduct, deactivateProduct } from "./product-actions";
+import { deleteProduct, deactivateProduct } from "../actions/product-actions";
 import Button from "@/app/components/Button";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 type Props = {
   id: string;
@@ -15,21 +17,38 @@ export function ProductHandleActions({ id }: Props) {
   const [showModal, setShowModal] = React.useState(false);
   const [submitting, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(false);
 
-  const handleDeleteClick = () => {
-    setError(null);
-    startTransition(async () => {
+  const router = useRouter();
+
+  async function handleDelete() {
+    if (loading) return;
+
+    const confirmed = window.confirm(
+      "Tem certeza que deseja deletar este produto? Esta ação não pode ser desfeita.",
+    );
+
+    if (!confirmed) return;
+
+    setLoading(true);
+    try {
       const res = await deleteProduct(id);
 
-      if (res.ok) return;
-
-      if (res.reason === "HAS_ORDERS") {
-        setShowModal(true);
-      } else if (res.message) {
-        setError(res.message);
+      if (!res.ok) {
+        throw new Error(res.message || "Erro ao deletar produto.");
       }
-    });
-  };
+
+      toast.success("Produto deletado com sucesso.");
+      router.refresh();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao deletar produto.";
+
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleDeactivate = () => {
     setError(null);
@@ -60,7 +79,7 @@ export function ProductHandleActions({ id }: Props) {
         </Link>
         <button
           type="button"
-          onClick={handleDeleteClick}
+          onClick={handleDelete}
           disabled={submitting}
           className="cursor-pointer rounded-md border border-red-600 px-2 py-1 text-red-600 hover:bg-red-900/20 disabled:opacity-50"
         >

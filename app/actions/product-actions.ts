@@ -2,7 +2,6 @@
 
 import { supabaseAction } from "@/utils/supabase/action";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 function num(v: FormDataEntryValue | null): number | null {
   if (v === null) return null;
@@ -38,11 +37,12 @@ export async function createProduct(formData: FormData) {
   });
 
   if (error) throw new Error(error.message);
-
-  redirect("/products");
 }
 
-export async function updateProduct(id: string, formData: FormData) {
+export async function updateProduct(
+  id: string,
+  formData: FormData,
+): Promise<{ ok: boolean; message?: string }> {
   const supabase = await supabaseAction();
 
   const name = String(formData.get("name") || "").trim();
@@ -53,7 +53,7 @@ export async function updateProduct(id: string, formData: FormData) {
   const max_height_cm = num(formData.get("max_height_cm"));
 
   if (!name || price === null) {
-    throw new Error("Nome e preço são obrigatórios.");
+    return { ok: false, message: "Nome e preço são obrigatórios." };
   }
 
   const { error } = await supabase
@@ -68,9 +68,18 @@ export async function updateProduct(id: string, formData: FormData) {
     })
     .eq("id", id);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    return {
+      ok: false,
+      message: error.message ?? "Erro ao atualizar produto.",
+    };
+  }
 
-  redirect(`/products/${id}`);
+  // revalida detalhe e listagem de produtos
+  revalidatePath(`/products/${id}`);
+  revalidatePath("/products");
+
+  return { ok: true };
 }
 
 export async function deleteProduct(id: string): Promise<{

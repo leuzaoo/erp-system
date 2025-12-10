@@ -9,12 +9,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { ProductHandleActions } from "@/app/actions/product-handle-actions";
-
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
 import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 
+import { ProductHandleActions } from "@/app/components/ProductHandleActions";
 import { DataTable, type Column } from "@/app/components/Table";
 import TablePagination from "@/app/components/TablePagination";
 import KpiCard from "@/app/components/KpiCard";

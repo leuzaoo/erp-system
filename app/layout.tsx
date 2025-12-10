@@ -1,6 +1,9 @@
-import "./globals.css";
 import { Manrope } from "next/font/google";
 import type { Metadata } from "next";
+
+import "./globals.css";
+
+import { AppToaster } from "./components/AppToaster";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -23,6 +26,7 @@ export default function RootLayout({
       <body className={`${manrope.className} antialiased`}>
         {/* <SupabaseListener /> */}
         {children}
+        <AppToaster />
       </body>
     </html>
   );

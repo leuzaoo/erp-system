@@ -1,7 +1,8 @@
 "use client";
 
-import * as React from "react";
 import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
 
 import { updateOrder } from "@/app/actions/update-order-actions";
 import type { ItemErrors } from "@/types/ItemsErrors";
@@ -256,6 +257,7 @@ export default function OrderEditForm({
       return;
     }
 
+    toast.success("Pedido atualizado com sucesso!");
     router.push(`/orders/${order.id}`);
   };
 

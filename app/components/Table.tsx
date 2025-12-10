@@ -61,7 +61,7 @@ export function DataTable<T>({
         <table className="w-full">
           <thead
             className={clsx(
-              "text-darker bg-pattern-200 text-sm",
+              "text-darker bg-pattern-200",
               stickyHeader && "sticky top-0 z-10",
             )}
           >
@@ -72,7 +72,7 @@ export function DataTable<T>({
                   style={{ width: c.width }}
                   className={clsx(
                     pad,
-                    "border-pattern-200 border-b text-left text-base font-bold",
+                    "border-pattern-200 border-b text-left text-sm font-bold",
                     c.align === "center" && "text-center",
                     c.align === "right" && "text-right",
                     c.headerClassName,

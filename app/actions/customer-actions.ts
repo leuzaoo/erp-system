@@ -114,3 +114,55 @@ export async function updateCustomerAction(
 
   return { ok: true as const };
 }
+
+export async function deleteCustomerAction(id: string): Promise<{
+  ok: boolean;
+  reason?: "HAS_ORDERS" | "GENERIC";
+  message?: string;
+}> {
+  await requireRole(["admin"]);
+
+  const supabase = await supabaseAction();
+
+  const { count, error: countError } = await supabase
+    .from("orders")
+    .select("id", {
+      count: "exact",
+      head: true,
+    })
+    .eq("customer_id", id);
+
+  if (countError) {
+    return {
+      ok: false,
+      reason: "GENERIC",
+      message:
+        countError.message ??
+        "Erro ao verificar se o cliente está vinculado a algum pedido.",
+    };
+  }
+
+  if ((count ?? 0) > 0) {
+    return {
+      ok: false,
+      reason: "HAS_ORDERS",
+      message:
+        "O cliente não pode ser excluído pois está vinculado a um ou mais pedidos.",
+    };
+  }
+
+  const { error } = await supabase.from("customers").delete().eq("id", id);
+
+  if (error) {
+    return {
+      ok: false,
+      reason: "GENERIC",
+      message: error.message ?? "Erro ao excluir o cliente.",
+    };
+  }
+
+  revalidatePath("/customers");
+  revalidatePath("/sales/new-sale");
+
+  return { ok: true };
+}

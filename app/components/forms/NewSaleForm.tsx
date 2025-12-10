@@ -2,6 +2,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { PlusIcon } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 
 import {
@@ -238,6 +239,8 @@ export default function NewSaleForm({ customers, products }: Props) {
       setFormError(res.message);
       return;
     }
+
+    toast.success("Venda criada com sucesso!");
     router.push(`/orders/${res.orderId}`);
   };
 

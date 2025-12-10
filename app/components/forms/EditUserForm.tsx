@@ -11,6 +11,7 @@ import type { UserRow } from "@/types/UserRow";
 
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
+import { toast } from "sonner";
 
 interface EditUserFormProps {
   user: UserRow;
@@ -63,10 +64,12 @@ export default function EditUserForm({ user }: EditUserFormProps) {
 
     router.push("/users");
     router.refresh();
+    toast.success("Usuário atualizado com sucesso.");
   }
 
   async function handleDelete() {
-    if (!confirm("Tem certeza que deseja remover este usuário?")) return;
+    if (!confirm(`Tem certeza que deseja excluir o usuário ${user.name}?`))
+      return;
 
     setDeleting(true);
     setError(null);
@@ -81,6 +84,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
 
     router.push("/users");
     router.refresh();
+    toast.success("Usuário excluído com sucesso.");
   }
 
   return (
@@ -146,7 +150,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
           type="button"
           onClick={handleDelete}
           disabled={deleting || submitting}
-          className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-red-300 p-2 text-sm text-red-600 hover:bg-red-100 hover:text-red-700"
         >
           {deleting ? (
             <Loader2Icon className="h-4 w-4 animate-spin" />
@@ -169,9 +173,9 @@ export default function EditUserForm({ user }: EditUserFormProps) {
           <Button
             type="submit"
             disabled={submitting || deleting}
-            className="flex w-40 justify-center hover:bg-blue-600"
+            className="flex w-20 justify-center hover:bg-blue-600"
           >
-            {submitting ? <Loader2Icon className="animate-spin" /> : "Salvar"}
+            {submitting ? <Loader2Icon size={16} className="animate-spin" /> : "Salvar"}
           </Button>
         </div>
       </div>

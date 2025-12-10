@@ -46,7 +46,7 @@ export async function createUserAction(
     await adminClient.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // sem confirmação de email
+      email_confirm: true,
     });
 
   if (authError || !authData?.user) {
@@ -97,7 +97,6 @@ export async function updateUserAction(
   const supabase = await supabaseRSC();
   const adminClient = supabaseAdmin();
 
-  // Atualiza email/senha no auth
   const authUpdate: { email?: string; password?: string } = {};
   if (email) authUpdate.email = email;
   if (password) authUpdate.password = password;
@@ -116,7 +115,6 @@ export async function updateUserAction(
     }
   }
 
-  // Atualiza perfil na tabela profiles
   const profileUpdate: Record<string, unknown> = {};
   if (name) profileUpdate.name = name;
   if (email) profileUpdate.email = email;

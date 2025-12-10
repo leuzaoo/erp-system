@@ -75,7 +75,6 @@ export async function updateProduct(
     };
   }
 
-  // revalida detalhe e listagem de produtos
   revalidatePath(`/products/${id}`);
   revalidatePath("/products");
 

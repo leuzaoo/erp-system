@@ -98,7 +98,6 @@ export default async function OrdersPage({
     });
   }
 
-  // Ordenação client-side, igual /sales
   if (sortField === "status") {
     filtered = [...filtered].sort((a, b) => {
       const sa = String(a.status ?? "");

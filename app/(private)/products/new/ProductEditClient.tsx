@@ -63,7 +63,6 @@ export default function ProductEditClient({
       }
 
       toast.success("Produto atualizado com sucesso.");
-      // navega para a página do produto; o toast continua visível
       router.push(`/products/${product.id}`);
     } catch (err) {
       console.error(err);

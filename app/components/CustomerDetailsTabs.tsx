@@ -1,13 +1,13 @@
 "use client";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import * as React from "react";
+import Link from "next/link";
 import {
   ArrowDown01Icon,
   ArrowDown10Icon,
   ArrowDownUpIcon,
 } from "lucide-react";
-import * as React from "react";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import type { CustomersTableRow } from "@/types/CustomersTableRow";
 import type { SalesTableRow } from "@/types/SalesTableRow";
@@ -21,9 +21,9 @@ import {
 } from "@/utils/orderStatus";
 
 import { DataTable, type Column } from "@/app/components/Table";
-import Button from "@/app/components/Button";
-import Card from "@/app/components/Card";
 import TablePagination from "@/app/components/TablePagination";
+import DescriptionList from "@/app/components/DescriptionList";
+import Card from "@/app/components/Card";
 
 type Props = {
   customer: CustomersTableRow;
@@ -218,8 +218,9 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
   ];
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-4 pb-10">
       <div className="border-pattern-200 flex gap-2 border-b text-sm">
+        <h1 className="sr-only">Informações</h1>
         <button
           type="button"
           onClick={() => handleTabChange("info")}
@@ -248,88 +249,52 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
           <section className="flex flex-col gap-4 lg:flex-row">
             <Card>
               <h2 className="mb-3 text-lg font-bold">Dados do cliente</h2>
-              <dl className="grid gap-3 md:grid-cols-2">
+
+              <div className="grid grid-cols-1 lg:grid-cols-2">
                 <div className="flex flex-col gap-3">
-                  <div>
-                    <dt className="text-xs uppercase">Nome completo</dt>
-                    <dd className="text-sm font-semibold">{customer.name}</dd>
-                  </div>
-
-                  <div>
-                    <dt className="text-xs uppercase">Documento</dt>
-                    <dd className="text-sm font-semibold">
-                      {customer.document || "—"}
-                    </dd>
-                  </div>
-
-                  <div>
-                    <dt className="text-xs uppercase">Telefone</dt>
-                    <dd className="text-sm font-semibold">
-                      {customer.phone || "—"}
-                    </dd>
-                  </div>
+                  <DescriptionList dt="Nome completo" dd={customer.name} />
+                  <DescriptionList
+                    dt="Documento"
+                    dd={customer.document || "-"}
+                  />
+                  <DescriptionList dt="Telefone" dd={customer.phone || "-"} />
                 </div>
 
                 <div>
-                  <dt className="text-xs uppercase">Criado por</dt>
-                  <dd className="text-sm font-semibold">
-                    {customer.creator?.name ?? "—"}
-                  </dd>
+                  <DescriptionList
+                    dt="Criado por"
+                    dd={customer.creator?.name || "-"}
+                  />
                 </div>
-              </dl>
+              </div>
             </Card>
 
             <Card>
               <h2 className="mb-3 text-lg font-semibold">Endereço</h2>
 
-              <div className="space-y-4 text-sm">
-                <p>
-                  Rua: <br />
-                  <span className="font-semibold">
-                    {customer.street && customer.number
+              <div className="grid grid-cols-1 space-y-4 lg:grid-cols-2">
+                <DescriptionList
+                  dt="Rua"
+                  dd={
+                    customer.street && customer.number
                       ? `${customer.street}, ${customer.number}`
-                      : "—"}
-                  </span>
-                </p>
+                      : "—"
+                  }
+                />
 
-                <p>
-                  Bairro: <br />
-                  <span className="font-semibold">
-                    {customer.district || "—"}
-                  </span>
-                </p>
-
-                <p>
-                  Cidade: <br />
-                  <span className="font-semibold">
-                    {customer.city && customer.state
-                      ? `${customer.city} - ${customer.state}`
-                      : "—"}
-                  </span>
-                </p>
-
-                <p>
-                  CEP: <br />
-                  <span className="font-semibold">
-                    {customer.postal_code ? customer.postal_code : "—"}
-                  </span>
-                </p>
-
-                <p>
-                  Complemento: <br />
-                  <span className="font-semibold">
-                    {customer.complement ? customer.complement : "—"}
-                  </span>
-                </p>
+                <DescriptionList dt="Bairro" dd={customer.district || "—"} />
+                <DescriptionList dt="Cidade" dd={customer.city || "—"} />
+                <DescriptionList
+                  dt="CEP"
+                  dd={customer.postal_code ? customer.postal_code : "—"}
+                />
+                <DescriptionList
+                  dt="Complemento"
+                  dd={customer.complement ? customer.complement : "—"}
+                />
               </div>
             </Card>
           </section>
-
-          <div className="flex justify-end">
-            <Link href={`/customers/${customer.id}/edit`}>
-              <Button className="flex items-center gap-2">Editar</Button>
-            </Link>
-          </div>
         </div>
       )}
 

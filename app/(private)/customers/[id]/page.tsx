@@ -1,3 +1,6 @@
+import { PencilIcon } from "lucide-react";
+import Link from "next/link";
+
 import { requireRole } from "@/utils/auth/requireRole";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 import { createdAt } from "@/utils/createdAt";
@@ -7,6 +10,7 @@ import type { CustomersTableRow } from "@/types/CustomersTableRow";
 import type { SalesTableRow } from "@/types/SalesTableRow";
 
 import CustomerDetailsTabs from "@/app/components/CustomerDetailsTabs";
+import Button from "@/app/components/Button";
 
 export default async function CustomerViewPage({
   params,
@@ -65,21 +69,23 @@ export default async function CustomerViewPage({
 
   return (
     <div className="space-y-6">
-      <section className="flex items-center justify-between">
-        <div>
+      <section className="flex items-start justify-between">
+        <div className="space-y-2">
           <h1 className="text-2xl font-bold">{customer.name}</h1>
-          <p className="mt-1 text-sm">
+          <p className="text-sm">
             ID do cliente:{" "}
             <span className="font-medium">{shortId(customer.id)}</span>
           </p>
+          <div className="text-sm">
+            <p>Cadastrado em: {createdAt(customer.created_at)}</p>
+          </div>
         </div>
 
-        <div className="text-right text-sm">
-          <p>Cadastrado em:</p>
-          <p className="font-medium text-neutral-800">
-            {createdAt(customer.created_at)}
-          </p>
-        </div>
+        <Link href={`/customers/${customer.id}/edit`}>
+          <Button className="flex items-center gap-2">
+            Editar <PencilIcon size={16} />
+          </Button>
+        </Link>
       </section>
 
       <CustomerDetailsTabs customer={customer} orders={orders} />

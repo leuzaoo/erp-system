@@ -9,7 +9,7 @@ export default async function ProfilePage() {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id, name, role, email, created_at")
     .eq("id", user.id)
     .single();
 
@@ -23,10 +23,52 @@ export default async function ProfilePage() {
     );
   }
 
+  const [ordersCountRes, customersCountRes, ordersTotalsRes] =
+    await Promise.all([
+      supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .eq("seller_id", user.id),
+
+      supabase
+        .from("customers")
+        .select("id", { count: "exact", head: true })
+        .eq("created_by", user.id),
+
+      supabase
+        .from("orders")
+        .select("total_price")
+        .eq("seller_id", user.id)
+        .limit(2000),
+    ]);
+
+  const ordersCount = ordersCountRes.count ?? 0;
+  const customersCount = customersCountRes.count ?? 0;
+
+  const totalSales =
+    (ordersTotalsRes.data ?? []).reduce(
+      (acc, o) => acc + Number(o.total_price || 0),
+      0,
+    ) ?? 0;
+
   return (
     <>
       <h1 className="text-2xl font-bold">Meu perfil</h1>
-      <ProfilePageClient profile={profile} />
+
+      <ProfilePageClient
+        profile={{
+          id: profile.id,
+          name: profile.name,
+          role: profile.role,
+          email: profile.email,
+          created_at: profile.created_at,
+        }}
+        sales={{
+          ordersCount,
+          customersCount,
+          totalSales,
+        }}
+      />
     </>
   );
 }

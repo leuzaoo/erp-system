@@ -12,6 +12,7 @@ import {
   ShieldUserIcon,
   ArrowLeftToLineIcon,
   ArrowRightToLineIcon,
+  UserRoundPenIcon,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -60,6 +61,12 @@ const NAV: Item[] = [
     label: "Usuários",
     roles: ["admin"],
     icon: <ShieldUserIcon strokeWidth={1.5} />,
+  },
+  {
+    href: "/profile",
+    label: "Perfil",
+    roles: ["admin", "vendedor"],
+    icon: <UserRoundPenIcon strokeWidth={1.5} />,
   },
 ];
 

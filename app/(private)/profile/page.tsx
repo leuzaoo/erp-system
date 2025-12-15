@@ -4,7 +4,7 @@ import { supabaseRSC } from "@/utils/supabase/rsc";
 import ProfilePageClient from "./ProfilePageClient";
 
 export default async function ProfilePage() {
-  const { user } = await requireRole(["admin", "vendedor"]);
+  const { user } = await requireRole(["admin", "vendedor", "fabrica"]);
   const supabase = await supabaseRSC();
 
   const { data: profile, error: profileError } = await supabase

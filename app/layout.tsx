@@ -1,14 +1,14 @@
-import { Manrope } from "next/font/google";
+import { Manrope, Zalando_Sans_SemiExpanded } from "next/font/google";
 import type { Metadata } from "next";
 
 import "./globals.css";
 
 import { AppToaster } from "./components/AppToaster";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const mainFont = Zalando_Sans_SemiExpanded({
+  variable: "--font-zalando",
   subsets: ["latin"],
-  weight: ["200", "300", "400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${manrope.className} antialiased`}>
+      <body className={`${mainFont.className} antialiased`}>
         {/* <SupabaseListener /> */}
         {children}
         <AppToaster />

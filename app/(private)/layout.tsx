@@ -59,7 +59,7 @@ export default async function PrivateLayout({
             </div>
           </header>
 
-          <main className="mx-auto px-6 pt-4">{children}</main>
+          <main className="mx-auto mb-10 px-6 pt-4">{children}</main>
         </div>
       </div>
     </div>

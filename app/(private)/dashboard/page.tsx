@@ -21,6 +21,7 @@ import {
   ORDER_STATUS_BADGE_CLASS,
 } from "@/utils/orderStatus";
 
+import SalesByDayChart from "@/app/components/charts/SalesByDayChart";
 import { DataTable, type Column } from "@/app/components/Table";
 import TablePagination from "@/app/components/TablePagination";
 import Card from "@/app/components/Card";
@@ -39,15 +40,25 @@ function countOrdersReadyToProduce(orders: { status: string }[] = []) {
 
 const PER_PAGE = 15;
 
+function isoDay(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<SearchParams>;
+  searchParams: Promise<
+    SearchParams & { range?: string; start?: string; end?: string }
+  >;
 }) {
   const {
     sort: sortParam,
     dir: dirParam,
     page: pageParam,
+
+    range: rangeParam,
+    start: startParam,
+    end: endParam,
   } = await searchParams;
 
   const sortField: SortField | undefined =
@@ -106,6 +117,73 @@ export default async function DashboardPage({
   const totalItems = count ?? 0;
   const pageOrders = orders ?? [];
 
+  let salesByDay: { day: string; total: number }[] = [];
+
+  const range = rangeParam ?? "14";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let startISO = startParam ?? "";
+  let endISO = endParam ?? "";
+
+  if (!startISO || !endISO) {
+    const days = range !== "custom" ? Number(range) : 14;
+    const safeDays = Number.isFinite(days) && days > 0 ? days : 14;
+
+    const since = new Date(today);
+    since.setDate(since.getDate() - (safeDays - 1));
+
+    startISO = isoDay(since);
+    endISO = isoDay(today);
+  }
+
+  const canSeeChart = userRole === "admin" || userRole === "vendedor";
+
+  if (canSeeChart) {
+    const since = new Date(`${startISO}T00:00:00.000Z`);
+    const until = new Date(`${endISO}T23:59:59.999Z`);
+
+    let chartQuery = supabase
+      .from("orders")
+      .select("created_at, total_price, seller_id")
+      .gte("created_at", since.toISOString())
+      .lte("created_at", until.toISOString())
+      .order("created_at", { ascending: true });
+
+    if (userRole === "vendedor") {
+      chartQuery = chartQuery.eq("seller_id", profile.id);
+    }
+
+    const { data: chartOrders, error: chartError } = await chartQuery;
+
+    if (chartError) {
+      return <pre className="text-red-600">Erro: {chartError.message}</pre>;
+    }
+
+    const map = new Map<string, number>();
+    for (const o of chartOrders ?? []) {
+      const dt = new Date(o.created_at);
+      const day = dt.toISOString().slice(0, 10);
+      map.set(day, (map.get(day) ?? 0) + Number(o.total_price || 0));
+    }
+
+    const days: { day: string; total: number }[] = [];
+    const cursor = new Date(since);
+    cursor.setUTCHours(0, 0, 0, 0);
+
+    const endCursor = new Date(until);
+    endCursor.setUTCHours(0, 0, 0, 0);
+
+    while (cursor <= endCursor) {
+      const key = cursor.toISOString().slice(0, 10);
+      days.push({ day: key, total: map.get(key) ?? 0 });
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+
+    salesByDay = days;
+  }
+
   const totalOrdersPrice = sumOrdersTotal(pageOrders);
   const ordersInProduction = countOrdersInProduction(pageOrders);
   const ordersReadyToProduce = countOrdersReadyToProduce(pageOrders);
@@ -154,6 +232,10 @@ export default async function DashboardPage({
     const params = new URLSearchParams();
     params.set("sort", field);
     params.set("dir", nextDir);
+
+    if (rangeParam) params.set("range", rangeParam);
+    if (startParam) params.set("start", startParam);
+    if (endParam) params.set("end", endParam);
 
     const qs = params.toString();
     return qs ? `/dashboard?${qs}` : "/dashboard";
@@ -238,8 +320,8 @@ export default async function DashboardPage({
   ];
 
   return (
-    <div>
-      <h1 className="mb-4 text-2xl font-bold">Dashboard</h1>
+    <div className="space-y-4">
+      <h1 className="text-2xl font-bold">Dashboard</h1>
 
       <div className="flex items-center gap-4 overflow-x-auto pb-4">
         {userRole === "fabrica" ? (
@@ -273,6 +355,15 @@ export default async function DashboardPage({
         )}
       </div>
 
+      {(userRole === "admin" || userRole === "vendedor") && (
+        <SalesByDayChart
+          data={salesByDay}
+          initialRange={rangeParam}
+          initialStart={startParam}
+          initialEnd={endParam}
+        />
+      )}
+
       {!pageOrders.length && (
         <p className="text-pattern-800">Nenhum pedido encontrado.</p>
       )}
@@ -294,6 +385,10 @@ export default async function DashboardPage({
             searchParams={{
               sort: sortField,
               dir: sortField ? sortDir : undefined,
+
+              range: rangeParam,
+              start: startParam,
+              end: endParam,
             }}
           />
         </>

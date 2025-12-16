@@ -323,7 +323,7 @@ export default async function DashboardPage({
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Dashboard</h1>
 
-      <div className="flex items-center gap-4 overflow-x-auto pb-4">
+      <div className="flex items-center gap-4 overflow-x-auto">
         {userRole === "fabrica" ? (
           <Card className="flex max-w-max min-w-max flex-col gap-1">
             <span>Pronto para fabricar</span>
@@ -345,7 +345,7 @@ export default async function DashboardPage({
               <span>Clientes cadastrados</span>
               <span className="text-2xl font-bold">{customersCount}</span>
             </Card>
-            <Card className="flex flex-col">
+            <Card className="flex min-w-max flex-col">
               <span>Total de vendas</span>
               <span className="text-2xl font-bold">
                 {brazilianCurrency(totalOrdersPrice)}

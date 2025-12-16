@@ -7,7 +7,7 @@ export default function Card({
   return (
     <div
       className={[
-        "bg-background w-full min-w-52 rounded-xl border border-gray-300 p-6",
+        "bg-background border-pattern-200 w-full min-w-56 rounded-xl border p-6",
         className,
       ].join(" ")}
     >

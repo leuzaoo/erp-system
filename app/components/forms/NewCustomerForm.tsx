@@ -4,6 +4,8 @@ import * as React from "react";
 
 import { createCustomerAction } from "@/app/actions/customer-actions";
 
+import { BRAZIL_STATES } from "@/utils/brazilEstates";
+
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
 
@@ -91,7 +93,29 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
           <Input name="phone" label="Telefone*" />
 
           <div className="grid grid-cols-2 gap-3">
-            <Input name="state" label="Estado*" />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-neutral-700">
+                Estado*
+              </label>
+
+              <select
+                name="state"
+                required
+                className="bg-pattern-100 h-10 rounded-md border border-neutral-300 px-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Selecione um estado
+                </option>
+
+                {BRAZIL_STATES.map((state) => (
+                  <option key={state.name} value={state.name}>
+                    {state.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <Input name="city" label="Cidade*" />
           </div>
 

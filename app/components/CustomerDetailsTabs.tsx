@@ -217,6 +217,8 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
     },
   ];
 
+  console.log(customer)
+  
   return (
     <section className="space-y-4 pb-10">
       <div className="border-pattern-200 flex gap-2 border-b text-sm">
@@ -284,6 +286,7 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
 
                 <DescriptionList dt="Bairro" dd={customer.district || "—"} />
                 <DescriptionList dt="Cidade" dd={customer.city || "—"} />
+                <DescriptionList dt="Estado" dd={customer.state || "—"} />
                 <DescriptionList
                   dt="CEP"
                   dd={customer.postal_code ? customer.postal_code : "—"}

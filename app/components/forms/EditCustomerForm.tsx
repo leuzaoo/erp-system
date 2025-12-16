@@ -1,15 +1,17 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Loader2Icon, Trash2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
+import type { CustomersTableRow } from "@/types/CustomersTableRow";
+
+import { BRAZIL_STATES } from "@/utils/brazilEstates";
 import {
   updateCustomerAction,
   deleteCustomerAction,
 } from "@/app/actions/customer-actions";
-import type { CustomersTableRow } from "@/types/CustomersTableRow";
 
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
@@ -131,11 +133,29 @@ export default function EditCustomerForm({
         />
 
         <div className="grid grid-cols-2 gap-3">
-          <Input
-            name="state"
-            label="Estado*"
-            defaultValue={customer.state ?? ""}
-          />
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-neutral-700">
+              Estado*
+            </label>
+
+            <select
+              name="state"
+              required
+              defaultValue={customer.state ?? ""}
+              className="bg-pattern-100 h-10 rounded-md border border-neutral-300 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="" disabled>
+                Selecione um estado
+              </option>
+
+              {BRAZIL_STATES.map((state) => (
+                <option key={state.name} value={state.name}>
+                  {state.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <Input
             name="city"
             label="Cidade*"

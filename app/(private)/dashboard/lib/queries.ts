@@ -13,6 +13,8 @@ type OrdersQueryParams = {
   ascending: boolean;
   from: number;
   to: number;
+  startISO: string;
+  endISO: string;
 };
 
 type SalesByDayParams = {
@@ -25,6 +27,13 @@ type SalesByDayParams = {
 type CustomersCountParams = {
   userRole: DashboardUserRole;
   profileId: string;
+};
+
+type OrdersMetricsParams = {
+  userRole: DashboardUserRole;
+  profileId: string;
+  startISO: string;
+  endISO: string;
 };
 
 export async function fetchUserRole(
@@ -51,14 +60,27 @@ export async function fetchUserRole(
 
 export async function fetchOrders(
   supabase: SupabaseClient,
-  { userRole, orderColumn, ascending, from, to }: OrdersQueryParams,
+  {
+    userRole,
+    orderColumn,
+    ascending,
+    from,
+    to,
+    startISO,
+    endISO,
+  }: OrdersQueryParams,
 ): Promise<{ orders: OrderRow[]; totalItems: number } | { error: string }> {
+  const since = new Date(`${startISO}T00:00:00.000Z`);
+  const until = new Date(`${endISO}T23:59:59.999Z`);
+
   let ordersQuery = supabase
     .from("orders")
     .select(
       "id, number, customer_name_snapshot, seller_name_snapshot, created_at, status, total_price, customer_id, seller_id",
       { count: "exact" },
-    );
+    )
+    .gte("created_at", since.toISOString())
+    .lte("created_at", until.toISOString());
 
   if (userRole === "fabrica") {
     ordersQuery = ordersQuery.eq("status", "APROVADO");
@@ -153,4 +175,56 @@ export async function fetchCustomersCount(
   }
 
   return { customersCount: 0 };
+}
+
+export async function fetchOrdersMetrics(
+  supabase: SupabaseClient,
+  { userRole, profileId, startISO, endISO }: OrdersMetricsParams,
+): Promise<
+  | {
+      totalOrdersPrice: number;
+      ordersInProduction: number;
+      ordersReadyToProduce: number;
+    }
+  | { error: string }
+> {
+  const since = new Date(`${startISO}T00:00:00.000Z`);
+  const until = new Date(`${endISO}T23:59:59.999Z`);
+
+  let metricsQuery = supabase
+    .from("orders")
+    .select("status, total_price, seller_id")
+    .gte("created_at", since.toISOString())
+    .lte("created_at", until.toISOString());
+
+  if (userRole === "fabrica") {
+    metricsQuery = metricsQuery.eq("status", "APROVADO");
+  }
+
+  if (userRole === "vendedor") {
+    metricsQuery = metricsQuery.eq("seller_id", profileId);
+  }
+
+  const { data, error } = await metricsQuery;
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  const orders = data ?? [];
+  let totalOrdersPrice = 0;
+  let ordersInProduction = 0;
+  let ordersReadyToProduce = 0;
+
+  for (const order of orders) {
+    totalOrdersPrice += Number(order.total_price || 0);
+    if (order.status === "FABRICACAO") ordersInProduction += 1;
+    if (order.status === "APROVADO") ordersReadyToProduce += 1;
+  }
+
+  return {
+    totalOrdersPrice,
+    ordersInProduction,
+    ordersReadyToProduce,
+  };
 }

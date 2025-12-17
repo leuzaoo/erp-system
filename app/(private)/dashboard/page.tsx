@@ -7,13 +7,9 @@ import StatsCards from "./components/StatsCards";
 
 import { parseDashboardParams, type DashboardSearchParams } from "./lib/params";
 import {
-  countOrdersInProduction,
-  countOrdersReadyToProduce,
-  sumOrdersTotal,
-} from "./lib/metrics";
-import {
   fetchCustomersCount,
   fetchOrders,
+  fetchOrdersMetrics,
   fetchSalesByDay,
   fetchUserRole,
 } from "./lib/queries";
@@ -45,6 +41,8 @@ export default async function DashboardPage({
     ascending: resolvedParams.ascending,
     from: resolvedParams.from,
     to: resolvedParams.to,
+    startISO: resolvedParams.startISO,
+    endISO: resolvedParams.endISO,
   });
 
   if ("error" in ordersResult) {
@@ -54,13 +52,32 @@ export default async function DashboardPage({
   const pageOrders = ordersResult.orders;
   const totalItems = ordersResult.totalItems;
 
-  const totalOrdersPrice = sumOrdersTotal(pageOrders);
-  const ordersInProduction = countOrdersInProduction(pageOrders);
-  const ordersReadyToProduce = countOrdersReadyToProduce(pageOrders);
+  const metricsResult = await fetchOrdersMetrics(supabase, {
+    userRole,
+    profileId,
+    startISO: resolvedParams.startISO,
+    endISO: resolvedParams.endISO,
+  });
+
+  if ("error" in metricsResult) {
+    return (
+      <pre className="text-red-600">
+        Erro ao carregar métricas: {metricsResult.error}
+      </pre>
+    );
+  }
+
+  const {
+    totalOrdersPrice,
+    ordersInProduction,
+    ordersReadyToProduce,
+  } = metricsResult;
 
   const customersResult = await fetchCustomersCount(supabase, {
     userRole,
     profileId,
+    startISO: resolvedParams.startISO,
+    endISO: resolvedParams.endISO,
   });
 
   if ("error" in customersResult) {
@@ -97,7 +114,7 @@ export default async function DashboardPage({
 
       <StatsCards
         userRole={userRole}
-        ordersCount={pageOrders.length}
+        ordersCount={totalItems}
         ordersInProduction={ordersInProduction}
         ordersReadyToProduce={ordersReadyToProduce}
         customersCount={customersCount}

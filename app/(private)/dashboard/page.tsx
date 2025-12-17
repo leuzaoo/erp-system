@@ -76,6 +76,8 @@ export default async function DashboardPage({
   const customersResult = await fetchCustomersCount(supabase, {
     userRole,
     profileId,
+    startISO: resolvedParams.startISO,
+    endISO: resolvedParams.endISO,
   });
 
   if ("error" in customersResult) {

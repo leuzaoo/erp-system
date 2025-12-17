@@ -154,32 +154,27 @@ export async function fetchCustomersCount(
   const since = new Date(`${startISO}T00:00:00.000Z`);
   const until = new Date(`${endISO}T23:59:59.999Z`);
 
-  let query = supabase
-    .from("orders")
-    .select("customer_id, seller_id")
-    .gte("created_at", since.toISOString())
-    .lte("created_at", until.toISOString());
-
-  if (userRole === "vendedor") {
-    query = query.eq("seller_id", profileId);
-  }
-
   if (userRole === "fabrica") {
     return { customersCount: 0 };
   }
 
-  const { data, error } = await query;
+  let query = supabase
+    .from("customers")
+    .select("id", { count: "exact", head: true })
+    .gte("created_at", since.toISOString())
+    .lte("created_at", until.toISOString());
+
+  if (userRole === "vendedor") {
+    query = query.eq("created_by", profileId);
+  }
+
+  const { count, error } = await query;
 
   if (error) {
     return { error: error.message };
   }
 
-  const uniqueCustomers = new Set<string>();
-  for (const row of data ?? []) {
-    if (row.customer_id) uniqueCustomers.add(row.customer_id);
-  }
-
-  return { customersCount: uniqueCustomers.size };
+  return { customersCount: count ?? 0 };
 }
 
 export async function fetchOrdersMetrics(

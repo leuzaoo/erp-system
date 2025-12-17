@@ -27,6 +27,8 @@ type SalesByDayParams = {
 type CustomersCountParams = {
   userRole: DashboardUserRole;
   profileId: string;
+  startISO: string;
+  endISO: string;
 };
 
 type OrdersMetricsParams = {
@@ -147,34 +149,37 @@ export async function fetchSalesByDay(
 
 export async function fetchCustomersCount(
   supabase: SupabaseClient,
-  { userRole, profileId }: CustomersCountParams,
+  { userRole, profileId, startISO, endISO }: CustomersCountParams,
 ): Promise<{ customersCount: number } | { error: string }> {
-  if (userRole === "admin") {
-    const { data: customers, error } = await supabase
-      .from("customers")
-      .select("id");
+  const since = new Date(`${startISO}T00:00:00.000Z`);
+  const until = new Date(`${endISO}T23:59:59.999Z`);
 
-    if (error) {
-      return { error: error.message };
-    }
-
-    return { customersCount: customers?.length ?? 0 };
-  }
+  let query = supabase
+    .from("orders")
+    .select("customer_id, seller_id")
+    .gte("created_at", since.toISOString())
+    .lte("created_at", until.toISOString());
 
   if (userRole === "vendedor") {
-    const { count, error } = await supabase
-      .from("orders")
-      .select("customer_id", { count: "exact", head: true })
-      .eq("seller_id", profileId);
-
-    if (error) {
-      return { error: error.message };
-    }
-
-    return { customersCount: count ?? 0 };
+    query = query.eq("seller_id", profileId);
   }
 
-  return { customersCount: 0 };
+  if (userRole === "fabrica") {
+    return { customersCount: 0 };
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  const uniqueCustomers = new Set<string>();
+  for (const row of data ?? []) {
+    if (row.customer_id) uniqueCustomers.add(row.customer_id);
+  }
+
+  return { customersCount: uniqueCustomers.size };
 }
 
 export async function fetchOrdersMetrics(

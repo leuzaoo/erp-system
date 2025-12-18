@@ -1,10 +1,10 @@
 "use server";
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/utils/auth/requireRole";
-
+import { stripNonDigits } from "@/utils/brazilianDocuments";
 import { supabaseAction } from "@/utils/supabase/action";
 import { supabaseServer } from "@/utils/supabase/server";
+import { requireRole } from "@/utils/auth/requireRole";
 
 export type NewCustomerInput = {
   name: string;
@@ -59,7 +59,7 @@ export async function createCustomerAction(payload: NewCustomerInput): Promise<{
     .from("customers")
     .insert({
       name: payload.name,
-      document: payload.document || null,
+      document: payload.document ? stripNonDigits(payload.document) : null,
       phone: payload.phone,
       state: payload.state,
       city: payload.city,
@@ -103,9 +103,14 @@ export async function updateCustomerAction(
 
   const supabase = await supabaseAction();
 
+  const sanitizedPayload: UpdateCustomerInput = {
+    ...payload,
+    document: payload.document ? stripNonDigits(payload.document) : undefined,
+  };
+
   const { error } = await supabase
     .from("customers")
-    .update(payload)
+    .update(sanitizedPayload)
     .eq("id", id);
 
   if (error) {

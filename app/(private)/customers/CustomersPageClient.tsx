@@ -1,33 +1,21 @@
 "use client";
 
-import {
-  ArrowDown01Icon,
-  ArrowDown10Icon,
-  ArrowDownAZIcon,
-  ArrowDownUpIcon,
-  ArrowDownZAIcon,
-  PlusIcon,
-  SearchIcon,
-  XIcon,
-} from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
-import Link from "next/link";
-import moment from "moment";
 
-import type { CustomersTableRow } from "@/types/CustomersTableRow";
+import type { CustomerListRow } from "@/types/CustomerListRow";
+import { normalizeText } from "./lib/normalize";
 
 import NewCustomerForm from "@/app/components/forms/NewCustomerForm";
-import { DataTable, type Column } from "@/app/components/Table";
+import CustomersToolbar from "@/app/components/CustomersToolbar";
 import TablePagination from "@/app/components/TablePagination";
-import Button from "@/app/components/Button";
-import Input from "@/app/components/Input";
 import Card from "@/app/components/Card";
-
-type CustomerSortField = "name" | "state" | "created_at";
+import CustomersTable, {
+  type CustomerSortField,
+} from "@/app/components/CustomersTable";
 
 type Props = {
-  customers: CustomersTableRow[];
+  customers: CustomerListRow[];
   totalCount: number;
   rawQ: string;
 };
@@ -64,11 +52,18 @@ export default function CustomersPageClient({
     setQuery((prev) => (prev === qFromUrl ? prev : qFromUrl));
   }, [searchParams]);
 
-  const normalize = (value: string): string =>
-    (value || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase();
+  const applyQueryToUrl = React.useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    const trimmedQuery = query.trim();
+    if (trimmedQuery) {
+      params.set("q", trimmedQuery);
+    } else {
+      params.delete("q");
+    }
+    params.delete("page");
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [pathname, query, router, searchParams]);
 
   const handleSort = (field: CustomerSortField) => {
     const isCurrent = sortField === field;
@@ -93,27 +88,16 @@ export default function CustomersPageClient({
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const renderSortIcon = (
-    field: CustomerSortField,
-    ascIcon: React.ReactNode,
-    descIcon: React.ReactNode,
-  ) => {
-    if (sortField !== field) {
-      return <ArrowDownUpIcon size={16} />;
-    }
-    return sortDir === "asc" ? ascIcon : descIcon;
-  };
-
   const filteredCustomers = React.useMemo(() => {
     const term = query.trim();
     let list = [...customers];
 
     if (term) {
-      const q = normalize(term);
+      const q = normalizeText(term);
 
       list = list.filter((c) => {
-        const customerName = normalize(c.name);
-        const customerDocument = normalize(String(c.document ?? ""));
+        const customerName = normalizeText(c.name);
+        const customerDocument = normalizeText(String(c.document ?? ""));
 
         return customerName.includes(q) || customerDocument.includes(q);
       });
@@ -131,8 +115,8 @@ export default function CustomersPageClient({
       }
 
       if (sortField === "state") {
-        const sa = normalize(String(a.state ?? ""));
-        const sb = normalize(String(b.state ?? ""));
+        const sa = normalizeText(String(a.state ?? ""));
+        const sb = normalizeText(String(b.state ?? ""));
         return sa.localeCompare(sb, "pt-BR", { sensitivity: "base" }) * factor;
       }
 
@@ -158,122 +142,6 @@ export default function CustomersPageClient({
   const start = (page - 1) * PER_PAGE;
   const pageCustomers = filteredCustomers.slice(start, start + PER_PAGE);
 
-  const columns: Column<CustomersTableRow>[] = [
-    {
-      header: (
-        <button
-          type="button"
-          onClick={() => handleSort("name")}
-          className="hover:bg-pattern-100 flex cursor-pointer items-center gap-1 rounded-md px-2"
-        >
-          <span>Nome</span>
-          <span>
-            {renderSortIcon(
-              "name",
-              <ArrowDownAZIcon size={16} />,
-              <ArrowDownZAIcon size={16} />,
-            )}
-          </span>
-        </button>
-      ),
-      accessorKey: "name",
-      width: 600,
-      headerClassName: "select-none",
-      cell: (value, row) => (
-        <Link
-          href={`/customers/${row.id}`}
-          className="font-bold hover:underline"
-        >
-          {String(value)}
-        </Link>
-      ),
-    },
-    {
-      header: "Documento",
-      accessorKey: "document",
-      align: "left",
-      width: 200,
-      cell: (value) => (value ?? "—") as string,
-    },
-    {
-      header: "CEP",
-      accessorKey: "postal_code",
-      width: 200,
-      cell: (value) => (value ?? "-") as string,
-    },
-    {
-      header: (
-        <button
-          type="button"
-          onClick={() => handleSort("state")}
-          className="hover:bg-pattern-100 flex cursor-pointer items-center gap-1 rounded-md px-2"
-        >
-          <span>Estado</span>
-          <span>
-            {renderSortIcon(
-              "state",
-              <ArrowDownAZIcon size={16} />,
-              <ArrowDownZAIcon size={16} />,
-            )}
-          </span>
-        </button>
-      ),
-      accessorKey: "state",
-      align: "left",
-      width: 200,
-      headerClassName: "select-none",
-      cell: (value) => (value ?? "-") as string,
-    },
-    {
-      header: (
-        <button
-          type="button"
-          onClick={() => handleSort("created_at")}
-          className="hover:bg-pattern-100 ml-auto flex cursor-pointer items-center gap-1 rounded-md px-2"
-        >
-          <span>Cadastrado em</span>
-          <span>
-            {renderSortIcon(
-              "created_at",
-              <ArrowDown01Icon size={16} />,
-              <ArrowDown10Icon size={16} />,
-            )}
-          </span>
-        </button>
-      ),
-      accessorKey: "created_at",
-      align: "right",
-      width: 200,
-      headerClassName: "select-none",
-      cell: (value) => moment(String(value)).format("DD/MM/YYYY"),
-    },
-  ];
-
-  const columnsWithEdit: Column<CustomersTableRow>[] = [
-    ...columns,
-    {
-      header: "",
-      align: "right",
-      width: 160,
-      cell: (_, row) => (
-        <div className="flex gap-1">
-          <Link
-            href={`/customers/${row.id}`}
-            className="rounded-md border border-neutral-400 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-200"
-          >
-            Ver
-          </Link>
-          <Link
-            href={`/customers/${row.id}/edit`}
-            className="rounded-md border border-neutral-400 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-200"
-          >
-            Editar
-          </Link>
-        </div>
-      ),
-    },
-  ];
-
   return (
     <>
       <div className="space-y-4">
@@ -286,67 +154,25 @@ export default function CustomersPageClient({
           </Card>
         </div>
 
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex max-w-lg flex-1 items-center gap-2">
-            <div className="relative w-full">
-              <Input
-                name="q"
-                type="text"
-                placeholder="Nome ou documento do cliente"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
+        <CustomersToolbar
+          query={query}
+          onQueryChange={setQuery}
+          onApplyQuery={applyQueryToUrl}
+          onToggleNewCustomer={toggleNewCustomer}
+        />
 
-              {query && (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-neutral-500 hover:text-neutral-800"
-                  title="Limpar busca"
-                >
-                  <XIcon size={16} />
-                </button>
-              )}
-            </div>
-
-            <Button
-              type="button"
-              className="bg-darker! hover:bg-pattern-700! border-pattern-400! text-lighter! flex items-center gap-2 border"
-              onClick={() => {
-                const input =
-                  document.querySelector<HTMLInputElement>('input[name="q"]');
-                input?.focus();
-              }}
-            >
-              <SearchIcon size={16} />
-              Pesquisar
-            </Button>
-          </div>
-
-          <Button
-            type="button"
-            onClick={toggleNewCustomer}
-            className="flex items-center gap-2 border border-blue-500"
-          >
-            <PlusIcon size={16} />
-            Novo cliente
-          </Button>
-        </div>
-
-        <DataTable<CustomersTableRow>
-          columns={columnsWithEdit}
-          data={pageCustomers}
-          rowKey={(r) => r.id}
-          caption={
+        <CustomersTable
+          customers={pageCustomers}
+          sortField={sortField}
+          sortDir={sortDir}
+          onSort={handleSort}
+          queryCaption={
             query ? (
               <>
                 Resultados para: “<span className="font-bold">{query}</span>”.
               </>
             ) : undefined
           }
-          emptyMessage="Nenhum cliente encontrado."
-          zebra
-          stickyHeader
         />
 
         <TablePagination

@@ -5,6 +5,15 @@ import * as React from "react";
 import { createCustomerAction } from "@/app/actions/customer-actions";
 
 import { BRAZIL_STATES } from "@/utils/brazilEstates";
+import {
+  CPF_DIGITS,
+  formatBrazilianDocument,
+  getBrazilianDocumentKind,
+  isValidBrazilianDocumentDigits,
+  RG_MAX_DIGITS,
+  RG_MIN_DIGITS,
+  stripNonDigits,
+} from "@/utils/brazilianDocuments";
 
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
@@ -17,6 +26,8 @@ interface NewCustomerFormProps {
 const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [documentValue, setDocumentValue] = React.useState("");
+  const [documentTouched, setDocumentTouched] = React.useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,7 +36,8 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
     const form = new FormData(e.currentTarget);
 
     const name = String(form.get("name") || "").trim();
-    const document = String(form.get("document") || "").trim() || undefined;
+    const documentDigits = stripNonDigits(documentValue).slice(0, CPF_DIGITS);
+    const document = documentDigits.length > 0 ? documentDigits : undefined;
     const phone = String(form.get("phone") || "").trim();
     const state = String(form.get("state") || "").trim();
     const city = String(form.get("city") || "").trim();
@@ -46,6 +58,14 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
       !postal_code
     ) {
       setError("Preencha todos os campos obrigatórios (*) antes de salvar.");
+      return;
+    }
+
+    if (!isValidBrazilianDocumentDigits(documentDigits)) {
+      setDocumentTouched(true);
+      setError(
+        `Documento inválido. Use RG (${RG_MIN_DIGITS}–${RG_MAX_DIGITS} dígitos) ou CPF (${CPF_DIGITS} dígitos).`,
+      );
       return;
     }
 
@@ -89,7 +109,44 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <Input name="name" label="Nome*" required autoFocus />
-          <Input name="document" label="Documento" />
+          <div>
+            <Input
+              name="document"
+              label="Documento"
+              placeholder="CPF ou RG"
+              inputMode="numeric"
+              value={documentValue}
+              onBlur={() => setDocumentTouched(true)}
+              onChange={(e) => {
+                const digits = stripNonDigits(e.target.value).slice(
+                  0,
+                  CPF_DIGITS,
+                );
+                setDocumentValue(formatBrazilianDocument(digits));
+              }}
+            />
+            {documentValue && (
+              <div className="mt-1 flex items-center justify-between text-xs text-neutral-600">
+                <span>
+                  Tipo detectado:{" "}
+                  <span className="font-semibold">
+                    {getBrazilianDocumentKind(stripNonDigits(documentValue))}
+                  </span>
+                </span>
+                <span>{stripNonDigits(documentValue).length} dígitos</span>
+              </div>
+            )}
+            {documentTouched &&
+              documentValue &&
+              !isValidBrazilianDocumentDigits(
+                stripNonDigits(documentValue),
+              ) && (
+                <p className="mt-1 text-xs font-semibold text-red-600">
+                  Documento inválido. Use RG ({RG_MIN_DIGITS}–{RG_MAX_DIGITS}{" "}
+                  dígitos) ou CPF ({CPF_DIGITS} dígitos).
+                </p>
+              )}
+          </div>
           <Input name="phone" label="Telefone*" />
 
           <div className="grid grid-cols-2 gap-3">
@@ -131,13 +188,18 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
             <Input name="complement" label="Complemento" />
           </div>
 
-          <div className="mt-5 flex justify-end gap-3">
-            <Button type="button" onClick={closeModal} variant="outline">
+          <div className="mt-5 flex w-full justify-end gap-3">
+            <Button
+              type="button"
+              className="min-w-max"
+              onClick={closeModal}
+              variant="outline"
+            >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="flex w-32 justify-center hover:bg-blue-600"
+              className="flex w-32 min-w-max justify-center hover:bg-blue-600"
               disabled={submitting}
             >
               {submitting ? (

@@ -17,6 +17,7 @@ import {
   formatBrazilianDocument,
   stripNonDigits,
 } from "@/utils/brazilianDocuments";
+import { formatBrazilCep } from "@/utils/brazilianCep";
 
 import { DataTable, type Column } from "@/app/components/Table";
 
@@ -93,7 +94,11 @@ export default function CustomersTable({
       header: "CEP",
       accessorKey: "postal_code",
       width: 200,
-      cell: (value) => (value ?? "-") as string,
+      cell: (value) => {
+        const raw = String(value ?? "");
+        if (!raw) return "-";
+        return formatBrazilCep(raw);
+      },
     },
     {
       header: (

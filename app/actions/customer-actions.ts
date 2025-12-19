@@ -67,7 +67,7 @@ export async function createCustomerAction(payload: NewCustomerInput): Promise<{
       street: payload.street,
       number: payload.number,
       complement: payload.complement || null,
-      postal_code: payload.postal_code,
+      postal_code: stripNonDigits(payload.postal_code),
       created_by: user.id,
     })
     .select("id, name")
@@ -106,6 +106,7 @@ export async function updateCustomerAction(
   const sanitizedPayload: UpdateCustomerInput = {
     ...payload,
     document: payload.document ? stripNonDigits(payload.document) : undefined,
+    postal_code: stripNonDigits(payload.postal_code),
   };
 
   const { error } = await supabase

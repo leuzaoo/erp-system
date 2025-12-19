@@ -20,6 +20,11 @@ import {
   PHONE_MAX_DIGITS,
   PHONE_MIN_DIGITS,
 } from "@/utils/brazilianPhone";
+import {
+  CEP_DIGITS,
+  formatBrazilCep,
+  isValidBrazilCep,
+} from "@/utils/brazilianCep";
 
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
@@ -36,6 +41,8 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
   const [documentTouched, setDocumentTouched] = React.useState(false);
   const [phoneValue, setPhoneValue] = React.useState("");
   const [phoneTouched, setPhoneTouched] = React.useState(false);
+  const [cepValue, setCepValue] = React.useState("");
+  const [cepTouched, setCepTouched] = React.useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -54,7 +61,8 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
     const street = String(form.get("street") || "").trim();
     const number = String(form.get("number") || "").trim();
     const complement = String(form.get("complement") || "").trim() || undefined;
-    const postal_code = String(form.get("postal_code") || "").trim();
+    const cepDigits = stripNonDigits(cepValue).slice(0, CEP_DIGITS);
+    const postal_code = cepDigits;
 
     if (
       !name ||
@@ -82,6 +90,12 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
       setError(
         `Telefone inválido. Use DDD + 8 ou 9 dígitos (${PHONE_MIN_DIGITS}–${PHONE_MAX_DIGITS} dígitos no total).`,
       );
+      return;
+    }
+
+    if (!isValidBrazilCep(cepDigits)) {
+      setCepTouched(true);
+      setError(`CEP inválido. Informe ${CEP_DIGITS} dígitos.`);
       return;
     }
 
@@ -214,7 +228,27 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
 
           <div className="grid grid-cols-2 gap-3">
             <Input name="district" label="Bairro*" />
-            <Input name="postal_code" label="CEP*" />
+            <div>
+              <Input
+                name="postal_code"
+                label="CEP*"
+                inputMode="numeric"
+                value={cepValue}
+                onBlur={() => setCepTouched(true)}
+                onChange={(e) => {
+                  const digits = stripNonDigits(e.target.value).slice(
+                    0,
+                    CEP_DIGITS,
+                  );
+                  setCepValue(formatBrazilCep(digits));
+                }}
+              />
+              {cepTouched && !isValidBrazilCep(cepValue) && (
+                <p className="mt-1 text-xs font-semibold text-red-600">
+                  CEP inválido. Use 8 dígitos.
+                </p>
+              )}
+            </div>
           </div>
 
           <Input name="street" label="Rua*" />

@@ -20,6 +20,7 @@ import {
   formatBrazilianDocument,
   stripNonDigits,
 } from "@/utils/brazilianDocuments";
+import { formatBrazilCep } from "@/utils/brazilianCep";
 import {
   ORDER_STATUS_BADGE_CLASS,
   ORDER_STATUS_LABELS,
@@ -303,7 +304,11 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
                 <DescriptionList dt="Estado" dd={customer.state || "—"} />
                 <DescriptionList
                   dt="CEP"
-                  dd={customer.postal_code ? customer.postal_code : "—"}
+                  dd={
+                    customer.postal_code
+                      ? formatBrazilCep(customer.postal_code)
+                      : "—"
+                  }
                 />
                 <DescriptionList
                   dt="Complemento"

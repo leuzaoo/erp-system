@@ -17,6 +17,10 @@ import { formatBrazilPhone } from "@/utils/brazilianPhone";
 import { createdAt } from "@/utils/createdAt";
 import { shortId } from "@/utils/shortId";
 import {
+  formatBrazilianDocument,
+  stripNonDigits,
+} from "@/utils/brazilianDocuments";
+import {
   ORDER_STATUS_BADGE_CLASS,
   ORDER_STATUS_LABELS,
 } from "@/utils/orderStatus";
@@ -256,7 +260,13 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
                   <DescriptionList dt="Nome completo" dd={customer.name} />
                   <DescriptionList
                     dt="Documento"
-                    dd={customer.document || "-"}
+                    dd={
+                      customer.document
+                        ? formatBrazilianDocument(
+                            stripNonDigits(customer.document),
+                          )
+                        : "-"
+                    }
                   />
                   <DescriptionList
                     dt="Telefone"

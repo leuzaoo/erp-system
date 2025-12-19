@@ -7,12 +7,17 @@ import { toast } from "sonner";
 
 import type { CustomersTableRow } from "@/types/CustomersTableRow";
 
-import { stripNonDigits } from "@/utils/brazilianDocuments";
 import { BRAZIL_STATES } from "@/utils/brazilEstates";
 import {
   updateCustomerAction,
   deleteCustomerAction,
 } from "@/app/actions/customer-actions";
+import {
+  CPF_DIGITS,
+  formatBrazilianDocument,
+  isValidBrazilianDocumentDigits,
+  stripNonDigits,
+} from "@/utils/brazilianDocuments";
 import {
   formatBrazilPhone,
   isValidBrazilPhone,
@@ -31,6 +36,10 @@ export default function EditCustomerForm({
   const [submitting, setSubmitting] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [documentValue, setDocumentValue] = React.useState(
+    customer.document ? formatBrazilianDocument(customer.document) : "",
+  );
+  const [documentTouched, setDocumentTouched] = React.useState(false);
   const [phoneValue, setPhoneValue] = React.useState(
     customer.phone ? formatBrazilPhone(customer.phone) : "",
   );
@@ -44,9 +53,10 @@ export default function EditCustomerForm({
 
     const phoneDigits = stripNonDigits(phoneValue).slice(0, PHONE_MAX_DIGITS);
 
+    const documentDigits = stripNonDigits(documentValue).slice(0, CPF_DIGITS);
     const payload = {
       name: String(form.get("name") || "").trim(),
-      document: String(form.get("document") || "").trim() || undefined,
+      document: documentDigits.length ? documentDigits : undefined,
       phone: phoneDigits,
       state: String(form.get("state") || "").trim(),
       city: String(form.get("city") || "").trim(),
@@ -75,6 +85,14 @@ export default function EditCustomerForm({
     if (!isValidBrazilPhone(phoneDigits)) {
       setPhoneTouched(true);
       setError("Telefone inválido. Use DDD + 8 ou 9 dígitos.");
+      return;
+    }
+
+    if (!isValidBrazilianDocumentDigits(documentDigits)) {
+      setDocumentTouched(true);
+      setError(
+        "Documento inválido. Use RG (7–9 dígitos) ou CPF (11 dígitos).",
+      );
       return;
     }
 
@@ -141,8 +159,21 @@ export default function EditCustomerForm({
         <Input
           name="document"
           label="Documento"
-          defaultValue={customer.document ?? ""}
+          inputMode="numeric"
+          value={documentValue}
+          onBlur={() => setDocumentTouched(true)}
+          onChange={(e) => {
+            const digits = stripNonDigits(e.target.value).slice(0, CPF_DIGITS);
+            setDocumentValue(formatBrazilianDocument(digits));
+          }}
         />
+        {documentTouched &&
+          documentValue &&
+          !isValidBrazilianDocumentDigits(documentValue) && (
+            <p className="text-xs font-semibold text-red-600">
+              Documento inválido. Use RG (7–9 dígitos) ou CPF (11 dígitos).
+            </p>
+          )}
         <Input
           name="phone"
           label="Telefone*"

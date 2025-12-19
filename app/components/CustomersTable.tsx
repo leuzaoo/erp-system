@@ -13,6 +13,11 @@ import {
 
 import type { CustomerListRow } from "@/types/CustomerListRow";
 
+import {
+  formatBrazilianDocument,
+  stripNonDigits,
+} from "@/utils/brazilianDocuments";
+
 import { DataTable, type Column } from "@/app/components/Table";
 
 export type CustomerSortField = "name" | "state" | "created_at";
@@ -78,7 +83,11 @@ export default function CustomersTable({
       accessorKey: "document",
       align: "left",
       width: 200,
-      cell: (value) => (value ?? "—") as string,
+      cell: (value) => {
+        const digits = stripNonDigits(String(value ?? ""));
+        if (!digits) return "—";
+        return formatBrazilianDocument(digits);
+      },
     },
     {
       header: "CEP",

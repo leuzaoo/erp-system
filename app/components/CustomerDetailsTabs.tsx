@@ -13,6 +13,7 @@ import type { CustomersTableRow } from "@/types/CustomersTableRow";
 import type { SalesTableRow } from "@/types/SalesTableRow";
 
 import { brazilianCurrency } from "@/utils/brazilianCurrency";
+import { formatBrazilPhone } from "@/utils/brazilianPhone";
 import { createdAt } from "@/utils/createdAt";
 import { shortId } from "@/utils/shortId";
 import {
@@ -217,8 +218,6 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
     },
   ];
 
-  console.log(customer)
-  
   return (
     <section className="space-y-4 pb-10">
       <div className="border-pattern-200 flex gap-2 border-b text-sm">
@@ -259,7 +258,12 @@ export default function CustomerDetailsTabs({ customer, orders }: Props) {
                     dt="Documento"
                     dd={customer.document || "-"}
                   />
-                  <DescriptionList dt="Telefone" dd={customer.phone || "-"} />
+                  <DescriptionList
+                    dt="Telefone"
+                    dd={
+                      customer.phone ? formatBrazilPhone(customer.phone) : "-"
+                    }
+                  />
                 </div>
 
                 <div>

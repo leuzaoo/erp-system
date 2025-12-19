@@ -7,11 +7,17 @@ import { toast } from "sonner";
 
 import type { CustomersTableRow } from "@/types/CustomersTableRow";
 
+import { stripNonDigits } from "@/utils/brazilianDocuments";
 import { BRAZIL_STATES } from "@/utils/brazilEstates";
 import {
   updateCustomerAction,
   deleteCustomerAction,
 } from "@/app/actions/customer-actions";
+import {
+  formatBrazilPhone,
+  isValidBrazilPhone,
+  PHONE_MAX_DIGITS,
+} from "@/utils/brazilianPhone";
 
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
@@ -25,6 +31,10 @@ export default function EditCustomerForm({
   const [submitting, setSubmitting] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [phoneValue, setPhoneValue] = React.useState(
+    customer.phone ? formatBrazilPhone(customer.phone) : "",
+  );
+  const [phoneTouched, setPhoneTouched] = React.useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -32,10 +42,12 @@ export default function EditCustomerForm({
 
     const form = new FormData(e.currentTarget);
 
+    const phoneDigits = stripNonDigits(phoneValue).slice(0, PHONE_MAX_DIGITS);
+
     const payload = {
       name: String(form.get("name") || "").trim(),
       document: String(form.get("document") || "").trim() || undefined,
-      phone: String(form.get("phone") || "").trim(),
+      phone: phoneDigits,
       state: String(form.get("state") || "").trim(),
       city: String(form.get("city") || "").trim(),
       district: String(form.get("district") || "").trim(),
@@ -47,7 +59,6 @@ export default function EditCustomerForm({
 
     if (
       !payload.name ||
-      !payload.phone ||
       !payload.state ||
       !payload.city ||
       !payload.district ||
@@ -58,6 +69,12 @@ export default function EditCustomerForm({
       setError(
         "Por favor, preencha todos os campos obrigatórios (*) antes de salvar.",
       );
+      return;
+    }
+
+    if (!isValidBrazilPhone(phoneDigits)) {
+      setPhoneTouched(true);
+      setError("Telefone inválido. Use DDD + 8 ou 9 dígitos.");
       return;
     }
 
@@ -129,8 +146,22 @@ export default function EditCustomerForm({
         <Input
           name="phone"
           label="Telefone*"
-          defaultValue={customer.phone ?? ""}
+          inputMode="tel"
+          value={phoneValue}
+          onBlur={() => setPhoneTouched(true)}
+          onChange={(e) => {
+            const digits = stripNonDigits(e.target.value).slice(
+              0,
+              PHONE_MAX_DIGITS,
+            );
+            setPhoneValue(formatBrazilPhone(digits));
+          }}
         />
+        {phoneTouched && !isValidBrazilPhone(phoneValue) && (
+          <p className="text-xs font-semibold text-red-600">
+            Informe DDD + 8 ou 9 dígitos.
+          </p>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">

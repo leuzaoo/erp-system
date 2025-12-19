@@ -14,6 +14,12 @@ import {
   RG_MIN_DIGITS,
   stripNonDigits,
 } from "@/utils/brazilianDocuments";
+import {
+  formatBrazilPhone,
+  isValidBrazilPhone,
+  PHONE_MAX_DIGITS,
+  PHONE_MIN_DIGITS,
+} from "@/utils/brazilianPhone";
 
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
@@ -28,6 +34,8 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
   const [error, setError] = React.useState<string | null>(null);
   const [documentValue, setDocumentValue] = React.useState("");
   const [documentTouched, setDocumentTouched] = React.useState(false);
+  const [phoneValue, setPhoneValue] = React.useState("");
+  const [phoneTouched, setPhoneTouched] = React.useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -38,7 +46,8 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
     const name = String(form.get("name") || "").trim();
     const documentDigits = stripNonDigits(documentValue).slice(0, CPF_DIGITS);
     const document = documentDigits.length > 0 ? documentDigits : undefined;
-    const phone = String(form.get("phone") || "").trim();
+    const phoneDigits = stripNonDigits(phoneValue).slice(0, PHONE_MAX_DIGITS);
+    const phone = phoneDigits;
     const state = String(form.get("state") || "").trim();
     const city = String(form.get("city") || "").trim();
     const district = String(form.get("district") || "").trim();
@@ -49,7 +58,6 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
 
     if (
       !name ||
-      !phone ||
       !state ||
       !city ||
       !district ||
@@ -65,6 +73,14 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
       setDocumentTouched(true);
       setError(
         `Documento inválido. Use RG (${RG_MIN_DIGITS}–${RG_MAX_DIGITS} dígitos) ou CPF (${CPF_DIGITS} dígitos).`,
+      );
+      return;
+    }
+
+    if (!isValidBrazilPhone(phoneDigits)) {
+      setPhoneTouched(true);
+      setError(
+        `Telefone inválido. Use DDD + 8 ou 9 dígitos (${PHONE_MIN_DIGITS}–${PHONE_MAX_DIGITS} dígitos no total).`,
       );
       return;
     }
@@ -147,7 +163,27 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
                 </p>
               )}
           </div>
-          <Input name="phone" label="Telefone*" />
+          <div>
+            <Input
+              name="phone"
+              label="Telefone*"
+              inputMode="tel"
+              value={phoneValue}
+              onBlur={() => setPhoneTouched(true)}
+              onChange={(e) => {
+                const digits = stripNonDigits(e.target.value).slice(
+                  0,
+                  PHONE_MAX_DIGITS,
+                );
+                setPhoneValue(formatBrazilPhone(digits));
+              }}
+            />
+            {phoneTouched && !isValidBrazilPhone(phoneValue) && (
+              <p className="mt-1 text-xs font-semibold text-red-600">
+                Informe DDD + 8 ou 9 dígitos.
+              </p>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">

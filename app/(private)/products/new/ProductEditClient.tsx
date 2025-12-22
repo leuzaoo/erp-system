@@ -52,17 +52,19 @@ export default function ProductEditClient({
     if (loading) return;
 
     setLoading(true);
+    const toastId = toast.loading("Salvando alterações do produto.");
     const formData = new FormData(e.currentTarget);
 
     try {
       const result = await updateProduct(product.id, formData);
 
       if (!result?.ok) {
-        toast.error(result?.message ?? "Erro ao atualizar produto.");
+        const message = result?.message ?? "Erro ao atualizar produto.";
+        toast.error(message, { id: toastId });
         return;
       }
 
-      toast.success("Produto atualizado com sucesso.");
+      toast.success("Produto atualizado com sucesso.", { id: toastId });
       router.push(`/products/${product.id}`);
     } catch (err) {
       console.error(err);
@@ -70,7 +72,7 @@ export default function ProductEditClient({
         err instanceof Error
           ? err.message
           : "Erro inesperado ao atualizar produto.";
-      toast.error(message);
+      toast.error(message, { id: toastId });
     } finally {
       setLoading(false);
     }

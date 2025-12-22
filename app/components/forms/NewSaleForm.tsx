@@ -220,6 +220,7 @@ export default function NewSaleForm({ customers, products }: Props) {
     }
 
     setSubmitting(true);
+    const toastId = toast.loading("Criando nova venda.");
     const payload = {
       customer_id: customerId,
       items: items.map((it) => ({
@@ -232,16 +233,26 @@ export default function NewSaleForm({ customers, products }: Props) {
       })),
     };
 
-    const res: CreateOrderResult = await createOrder(payload);
-    setSubmitting(false);
+    try {
+      const res: CreateOrderResult = await createOrder(payload);
 
-    if (!res.ok) {
-      setFormError(res.message);
-      return;
+      if (!res.ok) {
+        const message = res.message || "Não foi possível criar a venda.";
+        setFormError(message);
+        toast.error(message, { id: toastId });
+        return;
+      }
+
+      toast.success("Venda criada com sucesso!", { id: toastId });
+      router.push(`/orders/${res.orderId}`);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Não foi possível criar a venda.";
+      setFormError(message);
+      toast.error(message, { id: toastId });
+    } finally {
+      setSubmitting(false);
     }
-
-    toast.success("Venda criada com sucesso!");
-    router.push(`/orders/${res.orderId}`);
   };
 
   return (

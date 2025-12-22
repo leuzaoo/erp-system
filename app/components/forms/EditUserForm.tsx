@@ -54,17 +54,20 @@ export default function EditUserForm({ user }: EditUserFormProps) {
     if (passwordRaw) payload.password = passwordRaw;
 
     setSubmitting(true);
+    const toastId = toast.loading("Atualizando informações do usuário...");
     const res = await updateUserAction(user.id, payload);
     setSubmitting(false);
 
     if (!res.ok) {
-      setError(res.message ?? "Erro ao atualizar usuário.");
+      const message = res.message ?? "Erro ao atualizar usuário.";
+      setError(message);
+      toast.error(message, { id: toastId });
       return;
     }
 
     router.push("/users");
     router.refresh();
-    toast.success("Usuário atualizado com sucesso.");
+    toast.success("Usuário atualizado com sucesso.", { id: toastId });
   }
 
   async function handleDelete() {
@@ -175,7 +178,11 @@ export default function EditUserForm({ user }: EditUserFormProps) {
             disabled={submitting || deleting}
             className="flex w-20 justify-center hover:bg-blue-600"
           >
-            {submitting ? <Loader2Icon size={16} className="animate-spin" /> : "Salvar"}
+            {submitting ? (
+              <Loader2Icon size={16} className="animate-spin" />
+            ) : (
+              "Salvar"
+            )}
           </Button>
         </div>
       </div>

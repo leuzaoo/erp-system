@@ -1,13 +1,14 @@
 "use client";
 
-import * as React from "react";
 import { EyeIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
 import Link from "next/link";
 
 import { deleteProduct, deactivateProduct } from "../actions/product-actions";
+
 import Button from "@/app/components/Button";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
 type Props = {
   id: string;
@@ -31,6 +32,7 @@ export function ProductHandleActions({ id }: Props) {
     if (!confirmed) return;
 
     setLoading(true);
+    const toastId = toast.loading("Deletando produto.");
     try {
       const res = await deleteProduct(id);
 
@@ -38,13 +40,13 @@ export function ProductHandleActions({ id }: Props) {
         throw new Error(res.message || "Erro ao deletar produto.");
       }
 
-      toast.success("Produto deletado com sucesso.");
+      toast.success("Produto deletado com sucesso.", { id: toastId });
       router.refresh();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao deletar produto.";
 
-      toast.error(message);
+      toast.error(message, { id: toastId });
     } finally {
       setLoading(false);
     }

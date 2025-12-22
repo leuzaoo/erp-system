@@ -2,6 +2,7 @@
 
 import { Loader2Icon, XIcon } from "lucide-react";
 import * as React from "react";
+import { toast } from "sonner";
 
 import { createUserAction } from "@/app/actions/user-actions";
 
@@ -9,7 +10,6 @@ import type { AppRole } from "@/utils/permissions";
 
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
-import { toast } from "sonner";
 
 type Props = {
   closeModal: () => void;
@@ -48,17 +48,20 @@ export default function NewUserForm({ closeModal, onSuccess }: Props) {
     }
 
     setSubmitting(true);
+    const toastId = toast.loading("Salvando novo usuário...");
     const res = await createUserAction({ name, email, role, password });
     setSubmitting(false);
 
     if (!res.ok) {
-      setError(res.message ?? "Não foi possível criar o usuário.");
+      const message = res.message ?? "Não foi possível criar o usuário.";
+      setError(message);
+      toast.error(message, { id: toastId });
       return;
     }
 
     onSuccess?.();
     closeModal();
-    toast.success("Usuário criado com sucesso.");
+    toast.success("Usuário criado com sucesso.", { id: toastId });
   }
 
   return (

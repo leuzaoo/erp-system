@@ -100,9 +100,7 @@ export default function EditCustomerForm({
 
     if (!isValidBrazilianDocumentDigits(documentDigits)) {
       setDocumentTouched(true);
-      setError(
-        "Documento inválido. Use RG (7–9 dígitos) ou CPF (11 dígitos).",
-      );
+      setError("Documento inválido. Use RG (7–9 dígitos) ou CPF (11 dígitos).");
       return;
     }
 
@@ -113,15 +111,18 @@ export default function EditCustomerForm({
     }
 
     setSubmitting(true);
+    const toastId = toast.loading("Salvando novas informações...");
     const res = await updateCustomerAction(customer.id, payload);
     setSubmitting(false);
 
     if (!res.ok) {
-      setError(res.message ?? "Não foi possível atualizar o cliente.");
+      const message = res.message ?? "Não foi possível atualizar o cliente.";
+      setError(message);
+      toast.error(message, { id: toastId });
       return;
     }
 
-    toast.success("Cliente atualizado com sucesso!");
+    toast.success("Cliente atualizado com sucesso!", { id: toastId });
     router.push(`/customers/${customer.id}`);
   }
 
@@ -136,22 +137,23 @@ export default function EditCustomerForm({
     if (!confirmed) return;
 
     setDeleting(true);
+    const toastId = toast.loading("Excluindo cliente...");
     try {
       const res = await deleteCustomerAction(customer.id);
 
       if (!res.ok) {
-        toast.error(
+        const message =
           res.message ??
-            "Não foi possível excluir o cliente. Verifique se ele está vinculado a pedidos.",
-        );
+          "Não foi possível excluir o cliente. Verifique se ele está vinculado a pedidos.";
+        toast.error(message, { id: toastId });
         return;
       }
 
-      toast.success("Cliente excluído com sucesso.");
+      toast.success("Cliente excluído com sucesso.", { id: toastId });
       router.push("/customers");
     } catch (err) {
       console.error(err);
-      toast.error("Erro inesperado ao excluir cliente.");
+      toast.error("Erro inesperado ao excluir cliente.", { id: toastId });
     } finally {
       setDeleting(false);
     }
@@ -316,10 +318,17 @@ export default function EditCustomerForm({
             </Button>
             <Button
               type="submit"
-              className="flex justify-center hover:bg-blue-600"
+              className="flex w-32 items-center justify-center hover:bg-blue-600"
               disabled={submitting || deleting}
             >
-              {submitting ? <Loader2Icon className="animate-spin" /> : "Salvar"}
+              {submitting ? (
+                <p className="flex items-center gap-2">
+                  Salvando{" "}
+                  <Loader2Icon size={16} className="animate-spin" />{" "}
+                </p>
+              ) : (
+                "Salvar"
+              )}
             </Button>
           </div>
         </div>

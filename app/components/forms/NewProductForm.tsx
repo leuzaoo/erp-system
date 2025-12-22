@@ -18,18 +18,19 @@ export function NewProductForm() {
     e.preventDefault();
     setErrorMessage(null);
     setSubmitting(true);
+    const toastId = toast.loading("Salvando novo produto.");
 
     const formData = new FormData(e.currentTarget);
 
     try {
       await createProduct(formData);
 
-      toast.success("Produto criado com sucesso.");
+      toast.success("Produto criado com sucesso.", { id: toastId });
       router.push("/products");
     } catch (err) {
       console.error(err);
       setErrorMessage("Não foi possível criar o produto.");
-      toast.error("Não foi possível criar o produto.");
+      toast.error("Não foi possível criar o produto.", { id: toastId });
     } finally {
       setSubmitting(false);
     }

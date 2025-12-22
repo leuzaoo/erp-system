@@ -1,4 +1,4 @@
-import { Manrope, Zalando_Sans_SemiExpanded } from "next/font/google";
+import { Zalando_Sans_SemiExpanded } from "next/font/google";
 import type { Metadata } from "next";
 
 import "./globals.css";

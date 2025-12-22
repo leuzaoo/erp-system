@@ -220,7 +220,7 @@ export default function NewSaleForm({ customers, products }: Props) {
     }
 
     setSubmitting(true);
-    const toastId = toast.loading("Salvando nova venda");
+    const toastId = toast.loading("Criando nova venda.");
     const payload = {
       customer_id: customerId,
       items: items.map((it) => ({

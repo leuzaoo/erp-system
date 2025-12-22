@@ -137,22 +137,23 @@ export default function EditCustomerForm({
     if (!confirmed) return;
 
     setDeleting(true);
+    const toastId = toast.loading("Excluindo cliente...");
     try {
       const res = await deleteCustomerAction(customer.id);
 
       if (!res.ok) {
-        toast.error(
+        const message =
           res.message ??
-            "Não foi possível excluir o cliente. Verifique se ele está vinculado a pedidos.",
-        );
+          "Não foi possível excluir o cliente. Verifique se ele está vinculado a pedidos.";
+        toast.error(message, { id: toastId });
         return;
       }
 
-      toast.success("Cliente excluído com sucesso.");
+      toast.success("Cliente excluído com sucesso.", { id: toastId });
       router.push("/customers");
     } catch (err) {
       console.error(err);
-      toast.error("Erro inesperado ao excluir cliente.");
+      toast.error("Erro inesperado ao excluir cliente.", { id: toastId });
     } finally {
       setDeleting(false);
     }

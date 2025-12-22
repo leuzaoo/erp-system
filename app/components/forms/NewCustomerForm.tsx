@@ -100,30 +100,43 @@ const NewCustomerForm = ({ closeModal, onCreated }: NewCustomerFormProps) => {
     }
 
     setSubmitting(true);
+    const toastId = toast.loading("Salvando novo cliente");
 
-    const res = await createCustomerAction({
-      name,
-      document,
-      phone,
-      state,
-      city,
-      district,
-      street,
-      number,
-      complement,
-      postal_code,
-    });
+    try {
+      const res = await createCustomerAction({
+        name,
+        document,
+        phone,
+        state,
+        city,
+        district,
+        street,
+        number,
+        complement,
+        postal_code,
+      });
 
-    setSubmitting(false);
+      if (!res.ok || !res.customer) {
+        setError(res.message || "Não foi possível cadastrar o cliente.");
+        toast.error(res.message || "Não foi possível cadastrar o cliente.", {
+          id: toastId,
+        });
+        return;
+      }
 
-    if (!res.ok || !res.customer) {
-      setError(res.message || "Não foi possível cadastrar o cliente.");
-      return;
+      onCreated(res.customer);
+      closeModal();
+      toast.success("Cliente cadastrado com sucesso.", { id: toastId });
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Não foi possível cadastrar o cliente.";
+      setError(message);
+      toast.error(message, { id: toastId });
+    } finally {
+      setSubmitting(false);
     }
-
-    onCreated(res.customer);
-    closeModal();
-    toast.success("Cliente cadastrado com sucesso.");
   };
 
   return (

@@ -51,6 +51,19 @@ export default async function ProfilePage() {
       0,
     ) ?? 0;
 
+  const { data: orders } = await supabase
+    .from("orders")
+    .select(
+      `
+        id, number, status, total_price, created_at, customer_name_snapshot,
+        customer:customers (id, name),
+        items:order_items (id, quantity, product:products (id, name))
+      `,
+    )
+    .eq("seller_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(12);
+
   return (
     <>
       <h1 className="text-2xl font-bold">Meu perfil</h1>
@@ -67,6 +80,7 @@ export default async function ProfilePage() {
           ordersCount,
           customersCount,
           totalSales,
+          orders: orders ?? [],
         }}
       />
     </>

@@ -2,6 +2,8 @@
 
 import moment from "moment";
 
+import type { ProfileSale } from "@/types/ProfileSale";
+
 import ProfileDetailsTabs from "@/app/components/ProfileDetailsTabs";
 import Input from "@/app/components/Input";
 import Card from "@/app/components/Card";
@@ -18,6 +20,7 @@ type Props = {
     ordersCount: number;
     customersCount: number;
     totalSales: number;
+    orders: ProfileSale[];
   };
 };
 

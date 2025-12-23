@@ -1,8 +1,9 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
 import { Loader2Icon, Trash2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import * as React from "react";
 
 import { updateUserAction, deleteUserAction } from "@/app/actions/user-actions";
 
@@ -11,7 +12,6 @@ import type { UserRow } from "@/types/UserRow";
 
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
-import { toast } from "sonner";
 
 interface EditUserFormProps {
   user: UserRow;

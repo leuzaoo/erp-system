@@ -38,6 +38,30 @@ type OrdersMetricsParams = {
   endISO: string;
 };
 
+type RankingsParams = {
+  userRole: DashboardUserRole;
+  startISO: string;
+  endISO: string;
+};
+
+export type OrdersCountRankingItem = {
+  sellerId: string;
+  sellerName: string;
+  ordersCount: number;
+};
+
+export type OrdersValueRankingItem = {
+  sellerId: string;
+  sellerName: string;
+  totalValue: number;
+};
+
+export type CustomersRankingItem = {
+  sellerId: string;
+  sellerName: string;
+  customersCount: number;
+};
+
 export async function fetchUserRole(
   supabase: SupabaseClient,
   userId: string,
@@ -227,4 +251,119 @@ export async function fetchOrdersMetrics(
     ordersInProduction,
     ordersReadyToProduce,
   };
+}
+
+export async function fetchRankings(
+  supabase: SupabaseClient,
+  { userRole, startISO, endISO }: RankingsParams,
+): Promise<
+  | {
+      ordersByCount: OrdersCountRankingItem[];
+      ordersByValue: OrdersValueRankingItem[];
+      customersByCount: CustomersRankingItem[];
+    }
+  | { error: string }
+> {
+  if (userRole === "fabrica") {
+    return { ordersByCount: [], ordersByValue: [], customersByCount: [] };
+  }
+
+  const since = new Date(`${startISO}T00:00:00.000Z`);
+  const until = new Date(`${endISO}T23:59:59.999Z`);
+
+  const { data: orders, error: ordersError } = await supabase
+    .from("orders")
+    .select("seller_id, seller_name_snapshot, total_price, created_at")
+    .gte("created_at", since.toISOString())
+    .lte("created_at", until.toISOString());
+
+  if (ordersError) {
+    return { error: ordersError.message };
+  }
+
+  const ordersMap = new Map<
+    string,
+    {
+      sellerId: string;
+      sellerName: string;
+      ordersCount: number;
+      totalValue: number;
+    }
+  >();
+
+  for (const order of orders ?? []) {
+    if (!order.seller_id) continue;
+
+    const sellerId = String(order.seller_id);
+    const sellerName = order.seller_name_snapshot ?? "Sem vendedor";
+    const current = ordersMap.get(sellerId) ?? {
+      sellerId,
+      sellerName,
+      ordersCount: 0,
+      totalValue: 0,
+    };
+
+    current.ordersCount += 1;
+    current.totalValue += Number(order.total_price || 0);
+    ordersMap.set(sellerId, current);
+  }
+
+  const ordersByCount = Array.from(ordersMap.values())
+    .sort((a, b) => b.ordersCount - a.ordersCount)
+    .slice(0, 5)
+    .map((item) => ({
+      sellerId: item.sellerId,
+      sellerName: item.sellerName,
+      ordersCount: item.ordersCount,
+    }));
+
+  const ordersByValue = Array.from(ordersMap.values())
+    .sort((a, b) => b.totalValue - a.totalValue)
+    .slice(0, 5)
+    .map((item) => ({
+      sellerId: item.sellerId,
+      sellerName: item.sellerName,
+      totalValue: item.totalValue,
+    }));
+
+  const { data: customers, error: customersError } = await supabase
+    .from("customers")
+    .select(
+      `
+      created_by,
+      creator:profiles!customers_created_by_fkey (
+        id,
+        name
+      )
+    `,
+    )
+    .gte("created_at", since.toISOString())
+    .lte("created_at", until.toISOString());
+
+  if (customersError) {
+    return { error: customersError.message };
+  }
+
+  const customersMap = new Map<string, CustomersRankingItem>();
+
+  for (const customer of customers ?? []) {
+    if (!customer.created_by) continue;
+
+    const sellerId = String(customer.created_by);
+    const sellerName = customer.creator?.name ?? "Sem vendedor";
+    const current = customersMap.get(sellerId) ?? {
+      sellerId,
+      sellerName,
+      customersCount: 0,
+    };
+
+    current.customersCount += 1;
+    customersMap.set(sellerId, current);
+  }
+
+  const customersByCount = Array.from(customersMap.values())
+    .sort((a, b) => b.customersCount - a.customersCount)
+    .slice(0, 5);
+
+  return { ordersByCount, ordersByValue, customersByCount };
 }

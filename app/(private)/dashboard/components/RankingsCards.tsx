@@ -9,10 +9,13 @@ import type {
 import Card from "@/app/components/Card";
 
 type RankingsCardsProps = {
+  userRole: "admin" | "vendedor";
   ordersByCount: OrdersCountRankingItem[];
   ordersByValue: OrdersValueRankingItem[];
   customersByCount: CustomersRankingItem[];
 };
+
+const SHOW_VALUES_FOR_SELLER = true;
 
 type RankingRow = {
   rank: number;
@@ -52,7 +55,10 @@ function RankingCard({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={`${row.rank}-${row.name}`} className="border-pattern-100 border-b">
+              <tr
+                key={`${row.rank}-${row.name}`}
+                className="border-pattern-100 border-b"
+              >
                 <td className="py-2 pr-2 font-semibold">{row.rank}</td>
                 <td className="py-2 pr-2">{row.name}</td>
                 <td className="py-2 text-right font-semibold">{row.value}</td>
@@ -66,6 +72,7 @@ function RankingCard({
 }
 
 export default function RankingsCards({
+  userRole,
   ordersByCount,
   ordersByValue,
   customersByCount,
@@ -76,10 +83,13 @@ export default function RankingsCards({
     value: item.ordersCount,
   }));
 
+  const canShowValues =
+    userRole === "admin" || (userRole === "vendedor" && SHOW_VALUES_FOR_SELLER);
+
   const valueRows: RankingRow[] = ordersByValue.map((item, index) => ({
     rank: index + 1,
     name: item.sellerName,
-    value: brazilianCurrency(item.totalValue),
+    value: canShowValues ? brazilianCurrency(item.totalValue) : "—",
   }));
 
   const customerRows: RankingRow[] = customersByCount.map((item, index) => ({

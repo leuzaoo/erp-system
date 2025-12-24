@@ -1,4 +1,5 @@
 import { requireAuth } from "@/utils/auth/requireAuth";
+import { supabaseAdmin } from "@/utils/supabase/admin";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 
 import SalesByDayChart from "@/app/components/charts/SalesByDayChart";
@@ -121,7 +122,7 @@ export default async function DashboardPage({
   }
 
   if (canSeeRankings) {
-    const rankingsResult = await fetchRankings(supabase, {
+    const rankingsResult = await fetchRankings(supabaseAdmin(), {
       userRole,
       startISO: resolvedParams.startISO,
       endISO: resolvedParams.endISO,
@@ -181,6 +182,7 @@ export default async function DashboardPage({
         <section className="col-span-1 space-y-4">
           <h1 className="text-2xl font-bold">Rankings</h1>
           <RankingsCards
+            userRole={userRole}
             ordersByCount={rankings.ordersByCount}
             ordersByValue={rankings.ordersByValue}
             customersByCount={rankings.customersByCount}

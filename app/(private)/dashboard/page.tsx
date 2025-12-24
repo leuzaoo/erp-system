@@ -1,7 +1,7 @@
-import SalesByDayChart from "@/app/components/charts/SalesByDayChart";
 import { requireAuth } from "@/utils/auth/requireAuth";
 import { supabaseRSC } from "@/utils/supabase/rsc";
 
+import SalesByDayChart from "@/app/components/charts/SalesByDayChart";
 import OrdersTableSection from "./components/OrdersTableSection";
 import StatsCards from "./components/StatsCards";
 
@@ -67,11 +67,8 @@ export default async function DashboardPage({
     );
   }
 
-  const {
-    totalOrdersPrice,
-    ordersInProduction,
-    ordersReadyToProduce,
-  } = metricsResult;
+  const { totalOrdersPrice, ordersInProduction, ordersReadyToProduce } =
+    metricsResult;
 
   const customersResult = await fetchCustomersCount(supabase, {
     userRole,
@@ -109,41 +106,43 @@ export default async function DashboardPage({
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+    <div className="grid grid-cols-3">
+      <section className="col-span-2 space-y-4">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
 
-      <StatsCards
-        userRole={userRole}
-        ordersCount={totalItems}
-        ordersInProduction={ordersInProduction}
-        ordersReadyToProduce={ordersReadyToProduce}
-        customersCount={customersCount}
-        totalOrdersPrice={totalOrdersPrice}
-      />
-
-      {canSeeChart && (
-        <SalesByDayChart
-          data={salesByDay}
-          initialRange={resolvedParams.rawRange}
-          initialStart={resolvedParams.rawStart}
-          initialEnd={resolvedParams.rawEnd}
+        <StatsCards
+          userRole={userRole}
+          ordersCount={totalItems}
+          ordersInProduction={ordersInProduction}
+          ordersReadyToProduce={ordersReadyToProduce}
+          customersCount={customersCount}
+          totalOrdersPrice={totalOrdersPrice}
         />
-      )}
 
-      {!pageOrders.length ? (
-        <p className="text-pattern-800">Nenhum pedido encontrado.</p>
-      ) : (
-        <OrdersTableSection
-          orders={pageOrders}
-          totalItems={totalItems}
-          currentPage={resolvedParams.currentPage}
-          sortField={resolvedParams.sortField}
-          sortDir={resolvedParams.sortDir}
-          rangeParam={resolvedParams.rawRange}
-          startParam={resolvedParams.rawStart}
-          endParam={resolvedParams.rawEnd}
-        />
-      )}
+        {canSeeChart && (
+          <SalesByDayChart
+            data={salesByDay}
+            initialRange={resolvedParams.rawRange}
+            initialStart={resolvedParams.rawStart}
+            initialEnd={resolvedParams.rawEnd}
+          />
+        )}
+
+        {!pageOrders.length ? (
+          <p className="text-pattern-800">Nenhum pedido encontrado.</p>
+        ) : (
+          <OrdersTableSection
+            orders={pageOrders}
+            totalItems={totalItems}
+            currentPage={resolvedParams.currentPage}
+            sortField={resolvedParams.sortField}
+            sortDir={resolvedParams.sortDir}
+            rangeParam={resolvedParams.rawRange}
+            startParam={resolvedParams.rawStart}
+            endParam={resolvedParams.rawEnd}
+          />
+        )}
+      </section>
     </div>
   );
 }

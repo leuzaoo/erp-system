@@ -91,6 +91,7 @@ export default function Sidebar({ role }: { role: Role }) {
         showNavbar ? "w-60" : "w-18",
       )}
     >
+      <h1 className="sr-only">Sidebar</h1>
       <div
         className={clsx(
           "flex items-center justify-between px-6",
@@ -118,6 +119,7 @@ export default function Sidebar({ role }: { role: Role }) {
       </div>
 
       <nav className="mt-4 flex flex-col gap-2 p-2">
+        <h2 className="sr-only">Menu Items</h2>
         {items.map((i) => {
           const active =
             pathname === i.href || pathname.startsWith(i.href + "/");

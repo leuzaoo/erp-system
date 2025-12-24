@@ -25,6 +25,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${mainFont.className} antialiased`}>
         {/* <SupabaseListener /> */}
+        <h1 className="sr-only">ERP System</h1>
         {children}
         <AppToaster />
       </body>

@@ -51,9 +51,9 @@ export default async function PrivateLayout({
               <form action={signOut}>
                 <button
                   type="submit"
-                  className="cursor-pointer rounded-xl border border-red-400 bg-red-600 p-2 text-white hover:opacity-80"
+                  className="flex cursor-pointer items-center gap-2 rounded-xl border border-red-400 bg-red-600 p-2 font-medium text-white hover:opacity-80"
                 >
-                  <LogOutIcon />
+                  <LogOutIcon size={20} /> Sair
                 </button>
               </form>
             </div>

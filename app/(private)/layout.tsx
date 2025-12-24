@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
+import { LogOutIcon, UserCircle2Icon } from "lucide-react";
 import type { ReactNode } from "react";
-import { LogOutIcon } from "lucide-react";
 
 import { requireAuth } from "@/utils/auth/requireAuth";
 import { supabaseRSC } from "@/utils/supabase/rsc";
@@ -43,7 +43,8 @@ export default async function PrivateLayout({
         <div className="min-w-0 flex-1">
           <header className="border-pattern-200 sticky top-0 z-50 border-b backdrop-blur">
             <div className="mx-auto flex h-14 items-center justify-between px-6">
-              <div className="text-sm">
+              <div className="flex items-center gap-1 text-sm">
+                <UserCircle2Icon className="mr-1" />
                 <span className="capitalize">{profile.role}</span> •{" "}
                 <span className="font-bold">{profile.name}</span>
               </div>

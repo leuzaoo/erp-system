@@ -3,13 +3,18 @@ import { supabaseRSC } from "@/utils/supabase/rsc";
 
 import SalesByDayChart from "@/app/components/charts/SalesByDayChart";
 import OrdersTableSection from "./components/OrdersTableSection";
+import RankingsCards from "./components/RankingsCards";
 import StatsCards from "./components/StatsCards";
 
 import { parseDashboardParams, type DashboardSearchParams } from "./lib/params";
 import {
+  type CustomersRankingItem,
+  type OrdersCountRankingItem,
+  type OrdersValueRankingItem,
   fetchCustomersCount,
   fetchOrders,
   fetchOrdersMetrics,
+  fetchRankings,
   fetchSalesByDay,
   fetchUserRole,
 } from "./lib/queries";
@@ -87,8 +92,18 @@ export default async function DashboardPage({
 
   const customersCount = customersResult.customersCount;
   const canSeeChart = userRole === "admin" || userRole === "vendedor";
+  const canSeeRankings = userRole === "admin" || userRole === "vendedor";
 
   let salesByDay: { day: string; total: number }[] = [];
+  let rankings: {
+    ordersByCount: OrdersCountRankingItem[];
+    ordersByValue: OrdersValueRankingItem[];
+    customersByCount: CustomersRankingItem[];
+  } = {
+    ordersByCount: [],
+    ordersByValue: [],
+    customersByCount: [],
+  };
 
   if (canSeeChart) {
     const salesResult = await fetchSalesByDay(supabase, {
@@ -105,9 +120,28 @@ export default async function DashboardPage({
     salesByDay = salesResult.salesByDay;
   }
 
+  if (canSeeRankings) {
+    const rankingsResult = await fetchRankings(supabase, {
+      userRole,
+      startISO: resolvedParams.startISO,
+      endISO: resolvedParams.endISO,
+    });
+
+    if ("error" in rankingsResult) {
+      return <pre className="text-red-600">Erro: {rankingsResult.error}</pre>;
+    }
+
+    rankings = rankingsResult;
+  }
+
   return (
-    <div className="grid grid-cols-3">
-      <section className="col-span-2 space-y-4">
+    <div className="grid grid-cols-3 gap-4">
+      <section
+        className={[
+          "space-y-4",
+          canSeeRankings ? "col-span-2" : "col-span-3",
+        ].join(" ")}
+      >
         <h1 className="text-2xl font-bold">Dashboard</h1>
 
         <StatsCards
@@ -143,6 +177,16 @@ export default async function DashboardPage({
           />
         )}
       </section>
+      {canSeeRankings && (
+        <section className="col-span-1 space-y-4">
+          <h1 className="text-2xl font-bold">Rankings</h1>
+          <RankingsCards
+            ordersByCount={rankings.ordersByCount}
+            ordersByValue={rankings.ordersByValue}
+            customersByCount={rankings.customersByCount}
+          />
+        </section>
+      )}
     </div>
   );
 }

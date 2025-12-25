@@ -1,9 +1,9 @@
 # ERP System 💻
 
-1. Overview 👀  
-2. Application Technologies 👨🏻‍💻
-3. Project Structure 🗼
-4. Database and Row Level Security (RLS) 🔓
+1. Overview   
+2. Application Technologies 
+3. Project Structure 
+4. Database and Row Level Security (RLS)
 5. Supabase Functions and Triggers
 6. Authorization and Permission Rules
 7. Deployment and Environments
@@ -13,7 +13,7 @@
 11. Local Development
 12. Scripts
 
-## 1. Overview 👀
+## 1. Overview 
 
 This ERP system was designed to centralize all company data and operational workflows in a single platform.  
 The project originated from a real business need to automate processes that were previously handled manually.
@@ -27,7 +27,7 @@ The system allows users to:
 
 The architecture prioritizes scalability, security, and clear separation of responsibilities between user roles.
 
-## 2. Application Technologies 👨🏻‍💻
+## 2. Application Technologies
 
 **Languages**
 - TypeScript (frontend, server actions, and utilities)
@@ -49,7 +49,7 @@ The architecture prioritizes scalability, security, and clear separation of resp
 - Vercel for the web app
 - Supabase for database and auth services
 
-## 3. Project Structure 🗼
+## 3. Project Structure
 ```
 /app
 ├─ /(private)             → Authenticated routes
@@ -68,7 +68,7 @@ The architecture prioritizes scalability, security, and clear separation of resp
 ├─ /public                → Static assets
 ```
 
-## 4. Database and Row Level Security (RLS) 🔓
+## 4. Database and Row Level Security (RLS)
 
 This project uses Supabase with PostgreSQL, authentication, and RLS. The database is the system of record, and access rules are enforced directly in SQL policies rather than in ad-hoc API logic. This keeps data access consistent across server actions, client reads, and any future integrations.
 

@@ -1,4 +1,4 @@
-# ERP System 💻
+# ERP System
 
 1. Overview   
 2. Application Technologies 
